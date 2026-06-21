@@ -8,12 +8,12 @@
 		<version>3.5.13</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.speccs</groupId>
-	<artifactId>lms</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<groupId>com.lms</groupId>
+<artifactId>app</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>LMS App</name>
+<description>Enterprise Loan Management System</description>
+<url/>
 	<licenses>
 		<license/>
 	</licenses>
