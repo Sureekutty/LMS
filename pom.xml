@@ -11,7 +11,7 @@
 	<groupId>com.lms</groupId>
 <artifactId>app</artifactId>
 <version>0.0.1-SNAPSHOT</version>
-<name>LMS App</name>
+<name>LMS</name>
 <description>Enterprise Loan Management System</description>
 <url/>
 	<licenses>
