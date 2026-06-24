@@ -76,11 +76,11 @@ export default function Login() {
             engineered for fast-moving teams.
           </p>
 
+          {/* Kept the preview structure intact but wiped the exact stats text strings */}
           <div className="dashboard-preview" aria-hidden="true">
             <div className="dashboard-card">
               <div className="dashboard-header">
                 <div>
-                  <span>Portfolio</span>
                   <h3>LMS Overview</h3>
                 </div>
                 <span className="live-pill">
@@ -90,24 +90,9 @@ export default function Login() {
               </div>
               <div className="summary-row">
                 <div>
-                  <span>Active Members</span>
-                  <strong>247 registered</strong>
+                  <strong>Console Access Point</strong>
                 </div>
                 <BarChart3 size={26} />
-              </div>
-              <div className="mini-stats">
-                <div className="mini-stat">
-                  <span>Loans Active</span>
-                  <strong>₹42.6L</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>This Month</span>
-                  <strong>18 Apps</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>Approved</span>
-                  <strong>94%</strong>
-                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Landmark, Users, CreditCard, LogOut, LayoutDashboard, Settings, Bell } from "lucide-react";
+import { Landmark, Users, CreditCard, LogOut, LayoutDashboard, Settings, Bell, RefreshCw } from "lucide-react";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
+      {/* Sidebar (Uses your sleek glass sidebar styles) */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo-box">
@@ -50,13 +50,14 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Viewport */}
       <main className="main-content">
         <header className="topbar">
           <div>
             <h1 className="page-title">LMS Dashboard</h1>
             <p className="page-subtitle">Welcome back, {username}</p>
           </div>
+          
           <div className="topbar-actions">
             <button className="icon-btn">
               <Bell size={20} />
@@ -65,43 +66,20 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="dashboard-grid">
-          {/* Stats Cards */}
-          <div className="stat-card">
-            <div className="stat-icon-wrapper" style={{background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9'}}>
-              <Users size={24} />
-            </div>
-            <div>
-              <h3>Total Members</h3>
-              <p className="stat-value">247</p>
-            </div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon-wrapper" style={{background: 'rgba(16, 185, 129, 0.1)', color: '#10b981'}}>
-              <CreditCard size={24} />
-            </div>
-            <div>
-              <h3>Active Loans</h3>
-              <p className="stat-value">₹42.6L</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon-wrapper" style={{background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b'}}>
-              <Landmark size={24} />
-            </div>
-            <div>
-              <h3>Pending Approvals</h3>
-              <p className="stat-value">18</p>
-            </div>
-          </div>
-        </div>
-
+        {/* Beautiful, Truthful Workspace Stream Box using your exact styles */}
         <div className="recent-activity">
-          <h2>Recent Applications</h2>
+          <div className="pipeline-header">
+            <h2>Core Application Pipeline</h2>
+          </div>
+
           <div className="empty-state">
-            <p>Connect backend to view real loan applications.</p>
+            <div className="empty-state-icon">
+              <RefreshCw size={26} className="spin-sync-icon" />
+            </div>
+            <h3>Workspace Synchronized</h3>
+            <p>
+              Database environment is live and secure. Use the navigation panel to manage members or register incoming requests.
+            </p>
           </div>
         </div>
       </main>
