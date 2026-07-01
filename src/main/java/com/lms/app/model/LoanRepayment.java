@@ -35,6 +35,25 @@ public class LoanRepayment {
     @Column(length = 20)
     private String status = "PENDING";
 
+    // ===== NEW FIELDS FROM SPECCS MIGRATION (Sprint 13) =====
+
+    @Column(name = "pay_code", length = 3)
+    private String payCode;
+
+    @Column(name = "principal_or_interest", length = 1)
+    private String principalOrInterest;
+
+    @Column(name = "mode_of_payment", length = 15)
+    private String modeOfPayment;
+
+    @Column(name = "receipt_no", length = 14)
+    private String receiptNo;
+
+    @Column(name = "closing_balance", precision = 12, scale = 2)
+    private BigDecimal closingBalance;
+
+    // ===== END NEW FIELDS =====
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

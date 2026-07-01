@@ -63,6 +63,49 @@ public class Member {
     @Column(name = "phone_no", length = 15)
     private String phoneNo;
 
+    // ===== NEW FIELDS FROM SPECCS MIGRATION (Sprint 11) =====
+
+    @Column(name = "pan_no", length = 20)
+    private String panNo;
+
+    @Column(name = "aadhar_no", length = 15)
+    private String aadharNo;
+
+    @Column(length = 150)
+    private String email;
+
+    @Column(name = "office_phone", length = 15)
+    private String officePhone;
+
+    @Column(name = "ifsc_code", length = 14)
+    private String ifscCode;
+
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
+
+    @Column(name = "bank_place", length = 75)
+    private String bankPlace;
+
+    @Column(name = "retirement_date")
+    private LocalDate retirementDate;
+
+    @Column(name = "membership_fee", precision = 10, scale = 2)
+    private BigDecimal membershipFee;
+
+    @Column(name = "no_of_shares")
+    private Integer noOfShares = 0;
+
+    @Column(name = "welfare_fund", precision = 10, scale = 2)
+    private BigDecimal welfareFund = BigDecimal.ZERO;
+
+    @Column(name = "closed_date")
+    private LocalDateTime closedDate;
+
+    @Column(length = 250)
+    private String remarks;
+
+    // ===== END NEW FIELDS =====
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 

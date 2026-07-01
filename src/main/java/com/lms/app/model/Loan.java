@@ -53,6 +53,40 @@ public class Loan {
     @Column(name = "sanctioned_date")
     private LocalDate sanctionedDate;
 
+    // ===== NEW FIELDS FROM SPECCS MIGRATION (Sprint 12) =====
+
+    @Column(name = "loan_type", length = 3)
+    private String loanType;
+
+    @Column(name = "interest_method", length = 3)
+    private String interestMethod;
+
+    @Column(name = "fund_id", length = 10)
+    private String fundId;
+
+    @Column(name = "disbursed_date")
+    private LocalDate disbursedDate;
+
+    @Column(name = "disbursed_by", length = 50)
+    private String disbursedBy;
+
+    @Column(name = "closed_date")
+    private LocalDate closedDate;
+
+    @Column(name = "closed_by", length = 50)
+    private String closedBy;
+
+    @Column(name = "recovery_start_date")
+    private LocalDate recoveryStartDate;
+
+    @Column(name = "cheque_amount", precision = 12, scale = 2)
+    private BigDecimal chequeAmount;
+
+    @Column(length = 250)
+    private String remarks;
+
+    // ===== END NEW FIELDS =====
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
