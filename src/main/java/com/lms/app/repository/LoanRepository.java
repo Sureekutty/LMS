@@ -21,4 +21,14 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> findByMemberAndStatus(Member member, String status);
     
     boolean existsByLoanNo(String loanNo);
+
+    // ===== NEW QUERIES (Sprint 12) =====
+
+    List<Loan> findByLoanType(String loanType);
+
+    List<Loan> findByMemberAndLoanType(Member member, String loanType);
+
+    long countByStatus(String status);
+
+    List<Loan> findByClosedDateIsNull();
 }
