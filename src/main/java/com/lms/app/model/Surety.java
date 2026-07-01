@@ -28,6 +28,13 @@ public class Surety {
     @Column(name = "surety_order")
     private Integer suretyOrder;
 
+    // ===== NEW FIELD FROM SPECCS MIGRATION (Sprint 13) =====
+
+    @Column(length = 10)
+    private String status = "ACTIVE";
+
+    // ===== END NEW FIELD =====
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
