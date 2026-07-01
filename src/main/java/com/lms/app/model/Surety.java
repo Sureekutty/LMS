@@ -28,7 +28,7 @@ public class Surety {
     @Column(name = "surety_order")
     private Integer suretyOrder;
 
-    // ===== NEW FIELD FROM SPECCS MIGRATION (Sprint 13) =====
+    // ===== NEW FIELD FOR LMS (Sprint 13) =====
 
     @Column(length = 10)
     private String status = "ACTIVE";
