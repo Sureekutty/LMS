@@ -25,3 +25,6 @@ Thumbs.db
 # ===== LOGS =====
 *.log
 logs/
+
+# ===== DOCUMENTATION (NEVER UPLOAD) =====
+LMS_*.html
