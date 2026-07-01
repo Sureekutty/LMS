@@ -20,4 +20,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByMembershipNo(String membershipNo);
     
     boolean existsByStaffCode(String staffCode);
+
+    // ===== NEW QUERIES (Sprint 11) =====
+
+    Optional<Member> findByPanNo(String panNo);
+
+    Optional<Member> findByAadharNo(String aadharNo);
+
+    List<Member> findByNameContainingIgnoreCase(String name);
+
+    List<Member> findBySectionDivision(String sectionDivision);
+
+    long countByIsActiveTrue();
 }
