@@ -2,6 +2,7 @@ package com.lms.app.controller;
 
 import com.lms.app.dto.ApiResponse;
 import com.lms.app.model.Loan;
+import com.lms.app.model.Member;
 import com.lms.app.service.LoanService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,5 +99,14 @@ public class LoanController {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse(false, e.getMessage()));
         }
+    }
+
+    // GET LOANS BY MEMBER
+    @GetMapping("/member/{memberId}")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
+    public ResponseEntity<List<Loan>> getLoansByMemberId(@PathVariable Long memberId) {
+        Member member = new Member();
+        member.setId(memberId);
+        return ResponseEntity.ok(loanService.getLoansByMember(member));
     }
 }

@@ -3,6 +3,7 @@ package com.lms.app.controller;
 import com.lms.app.dto.ApiResponse;
 import com.lms.app.model.Member;
 import com.lms.app.service.MemberService;
+import com.lms.app.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,9 @@ public class MemberController {
 
     @Autowired
     private MemberService memberService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','CLERK')")
@@ -75,5 +79,20 @@ public class MemberController {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse(false, e.getMessage()));
         }
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
+    public ResponseEntity<?> getCurrentMember() {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        return userService.findByUsername(username)
+            .map(user -> {
+                if (user.getMember() != null) {
+                    return ResponseEntity.ok((Object) user.getMember());
+                } else {
+                    return ResponseEntity.badRequest().body((Object) new ApiResponse(false, "No member profile linked to this user account."));
+                }
+            })
+            .orElse(ResponseEntity.notFound().build());
     }
 }

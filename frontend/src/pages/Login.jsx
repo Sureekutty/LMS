@@ -31,8 +31,10 @@ export default function Login() {
       const response = await api.post("/auth/login", { username, password });
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("username", response.data.username);
+      localStorage.setItem("roles", JSON.stringify(response.data.roles || []));
+      localStorage.setItem("membershipNo", response.data.membershipNo || "");
       navigate("/dashboard");
-    } catch {
+    } catch (err) {
       setError("Invalid username or password");
     } finally {
       setLoading(false);

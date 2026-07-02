@@ -61,4 +61,8 @@ public class UserService {
         user.setRoles(roles);
         return userRepository.save(user);
     }
+
+    public java.util.Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 }
