@@ -21,6 +21,9 @@ public class LoanService {
     @Autowired
     private MemberService memberService;
 
+    @Autowired
+    private InterestCalculationService interestCalculationService;
+
     // Get all loans
     public List<Loan> getAllLoans() {
         return loanRepository.findAll();
@@ -54,9 +57,28 @@ public class LoanService {
     public Loan approveLoan(Long loanId, BigDecimal sanctionedAmount) {
         Loan loan = loanRepository.findById(loanId)
             .orElseThrow(() -> new RuntimeException("Loan not found: " + loanId));
+        
         loan.setStatus("APPROVED");
         loan.setAmountSanctioned(sanctionedAmount);
         loan.setSanctionedDate(LocalDate.now());
+        loan.setOutstandingPrincipal(sanctionedAmount);
+        loan.setOutstandingInterest(BigDecimal.ZERO);
+
+        // Fetch dynamic interest rate if not set
+        if (loan.getInterestRate() == null || loan.getInterestRate().compareTo(BigDecimal.ZERO) == 0) {
+            try {
+                BigDecimal rate = interestCalculationService.getApplicableRate(
+                        loan.getLoanType(), 
+                        sanctionedAmount, 
+                        loan.getNoOfInstallments()
+                );
+                loan.setInterestRate(rate);
+            } catch (Exception e) {
+                // Fallback to default interest rate if lookup fails (e.g. 12%)
+                loan.setInterestRate(BigDecimal.valueOf(12.0));
+            }
+        }
+
         // Calculate EMI
         loan.setMonthlyInstallment(calculateEMI(
             sanctionedAmount,

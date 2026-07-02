@@ -85,6 +85,12 @@ public class Loan {
     @Column(length = 250)
     private String remarks;
 
+    @Column(name = "outstanding_principal", precision = 12, scale = 2)
+    private BigDecimal outstandingPrincipal = BigDecimal.ZERO;
+
+    @Column(name = "outstanding_interest", precision = 12, scale = 2)
+    private BigDecimal outstandingInterest = BigDecimal.ZERO;
+
     // ===== END NEW FIELDS =====
 
     @Column(name = "created_at")
