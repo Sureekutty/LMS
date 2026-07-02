@@ -36,7 +36,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Check if header starts with "Bearer "
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtUtils.getUsernameFromToken(token);
+            try {
+                username = jwtUtils.getUsernameFromToken(token);
+            } catch (Exception e) {
+                // Log and ignore to allow request to continue (Spring Security will block if endpoint requires auth)
+                logger.warn("JWT validation failed: " + e.getMessage());
+            }
         }
 
         // Validate token and set authentication
