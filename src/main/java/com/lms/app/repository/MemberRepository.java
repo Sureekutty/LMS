@@ -21,7 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     
     boolean existsByStaffCode(String staffCode);
 
-    // ===== NEW QUERIES (Sprint 11) =====
+    // ===== NEW QUERIES =====
 
     Optional<Member> findByPanNo(String panNo);
 

@@ -53,7 +53,7 @@ public class Loan {
     @Column(name = "sanctioned_date")
     private LocalDate sanctionedDate;
 
-    // ===== NEW FIELDS FOR LMS (Sprint 12) =====
+    // ===== NEW FIELDS FOR LMS =====
 
     @Column(name = "loan_type", length = 3)
     private String loanType;
