@@ -22,7 +22,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     
     boolean existsByLoanNo(String loanNo);
 
-    // ===== NEW QUERIES (Sprint 12) =====
+    // ===== NEW QUERIES =====
 
     List<Loan> findByLoanType(String loanType);
 

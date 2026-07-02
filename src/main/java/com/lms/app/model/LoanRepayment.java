@@ -35,7 +35,7 @@ public class LoanRepayment {
     @Column(length = 20)
     private String status = "PENDING";
 
-    // ===== NEW FIELDS FOR LMS (Sprint 13) =====
+    // ===== NEW FIELDS FOR LMS =====
 
     @Column(name = "pay_code", length = 3)
     private String payCode;

@@ -63,7 +63,7 @@ public class Member {
     @Column(name = "phone_no", length = 15)
     private String phoneNo;
 
-    // ===== NEW FIELDS FOR LMS (Sprint 11) =====
+    // ===== NEW FIELDS FOR LMS =====
 
     @Column(name = "pan_no", length = 20)
     private String panNo;
