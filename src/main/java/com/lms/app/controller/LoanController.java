@@ -84,4 +84,19 @@ public class LoanController {
                 .body(new ApiResponse(false, e.getMessage()));
         }
     }
+
+    // DISBURSE LOAN
+    @PutMapping("/{id}/disburse")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    public ResponseEntity<?> disburseLoan(
+            @PathVariable Long id,
+            @RequestParam String disbursedBy) {
+        try {
+            Loan disbursed = loanService.disburseLoan(id, disbursedBy);
+            return ResponseEntity.ok(disbursed);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }

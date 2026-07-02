@@ -2,8 +2,11 @@ package com.lms.app.service;
 
 import com.lms.app.model.Loan;
 import com.lms.app.model.LoanRepayment;
+import com.lms.app.model.Transaction;
+import com.lms.app.model.TransactionType;
 import com.lms.app.repository.LoanRepository;
 import com.lms.app.repository.LoanRepaymentRepository;
+import com.lms.app.repository.TransactionTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,12 @@ public class LoanRepaymentService {
 
     @Autowired
     private LoanRepository loanRepository;
+
+    @Autowired
+    private TransactionService transactionService;
+
+    @Autowired
+    private TransactionTypeRepository transactionTypeRepository;
 
     public List<LoanRepayment> getAllRepayments() {
         return loanRepaymentRepository.findAll();
@@ -128,6 +137,28 @@ public class LoanRepaymentService {
             repayment.setPrincipalOrInterest("P"); // Principal only
         }
 
-        return loanRepaymentRepository.save(repayment);
+        LoanRepayment savedRepayment = loanRepaymentRepository.save(repayment);
+
+        // Record the financial ledger transaction!
+        Transaction txn = new Transaction();
+        txn.setMember(loan.getMember());
+        
+        // Find TransactionType for Loan Repayment (code: LR)
+        TransactionType txnType = transactionTypeRepository.findByTypeCode("LR")
+            .orElseGet(() -> {
+                TransactionType t = new TransactionType();
+                t.setTypeCode("LR");
+                t.setTypeName("Loan Repayment");
+                return transactionTypeRepository.save(t);
+            });
+        
+        txn.setTransactionType(txnType);
+        txn.setAmount(repayment.getAmount());
+        txn.setType("CREDIT");
+        txn.setReferenceNo(repayment.getReceiptNo());
+        txn.setDescription("Repayment received for loan: " + loan.getLoanNo() + " (Receipt No: " + repayment.getReceiptNo() + ")");
+        transactionService.recordTransaction(txn);
+
+        return savedRepayment;
     }
 }

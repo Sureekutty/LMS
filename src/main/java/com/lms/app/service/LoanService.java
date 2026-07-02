@@ -2,10 +2,14 @@ package com.lms.app.service;
 
 import com.lms.app.model.Loan;
 import com.lms.app.model.Member;
+import com.lms.app.model.Transaction;
+import com.lms.app.model.TransactionType;
 import com.lms.app.repository.LoanRepository;
+import com.lms.app.repository.TransactionTypeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -23,6 +27,12 @@ public class LoanService {
 
     @Autowired
     private InterestCalculationService interestCalculationService;
+
+    @Autowired
+    private TransactionService transactionService;
+
+    @Autowired
+    private TransactionTypeRepository transactionTypeRepository;
 
     // Get all loans
     public List<Loan> getAllLoans() {
@@ -123,5 +133,45 @@ public class LoanService {
     public BigDecimal calculateEligibility(BigDecimal basicPay) {
         // Member can get maximum 20x of basic pay
         return basicPay.multiply(BigDecimal.valueOf(20));
+    }
+
+    // Disburse loan
+    @Transactional
+    public Loan disburseLoan(Long loanId, String disbursedBy) {
+        Loan loan = loanRepository.findById(loanId)
+            .orElseThrow(() -> new RuntimeException("Loan not found: " + loanId));
+        
+        if (!"APPROVED".equalsIgnoreCase(loan.getStatus())) {
+            throw new RuntimeException("Only approved loans can be disbursed.");
+        }
+
+        loan.setStatus("ACTIVE"); // ACTIVE/DISBURSED
+        loan.setDisbursedDate(LocalDate.now());
+        loan.setDisbursedBy(disbursedBy);
+        loan.setOutstandingPrincipal(loan.getAmountSanctioned());
+        loan.setOutstandingInterest(BigDecimal.ZERO);
+        loanRepository.save(loan);
+
+        // Record the financial ledger transaction!
+        Transaction txn = new Transaction();
+        txn.setMember(loan.getMember());
+        
+        // Find TransactionType for Loan Disbursement (code: LD)
+        TransactionType txnType = transactionTypeRepository.findByTypeCode("LD")
+            .orElseGet(() -> {
+                TransactionType t = new TransactionType();
+                t.setTypeCode("LD");
+                t.setTypeName("Loan Disbursement");
+                return transactionTypeRepository.save(t);
+            });
+        
+        txn.setTransactionType(txnType);
+        txn.setAmount(loan.getAmountSanctioned());
+        txn.setType("DEBIT");
+        txn.setReferenceNo(loan.getLoanNo());
+        txn.setDescription("Disbursement of loan account: " + loan.getLoanNo());
+        transactionService.recordTransaction(txn);
+
+        return loan;
     }
 }
