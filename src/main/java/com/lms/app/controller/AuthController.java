@@ -4,6 +4,7 @@ import com.lms.app.dto.ApiResponse;
 import com.lms.app.dto.JwtResponse;
 import com.lms.app.dto.LoginRequest;
 import com.lms.app.dto.RegisterRequest;
+import com.lms.app.model.User;
 import com.lms.app.security.JwtUtils;
 import com.lms.app.service.UserService;
 
@@ -14,6 +15,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,7 +45,17 @@ public class AuthController {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String token = jwtUtils.generateToken(request.getUsername());
-            return ResponseEntity.ok(new JwtResponse(token, request.getUsername()));
+            
+            User user = userService.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<String> roles = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+            
+            String membershipNo = user.getMember() != null ? user.getMember().getMembershipNo() : null;
+
+            return ResponseEntity.ok(new JwtResponse(token, request.getUsername(), roles, membershipNo));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse(false, "Invalid username or password!"));

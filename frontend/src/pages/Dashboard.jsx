@@ -7,12 +7,18 @@ import "./Dashboard.css";
 export default function Dashboard() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username") || "Admin";
+  
+  // Role Parsing
+  const roles = JSON.parse(localStorage.getItem("roles") || "[]");
+  const isAdmin = roles.length === 0 || roles.some(r => ["ROLE_ADMIN", "ROLE_CLERK", "ROLE_ACCOUNTANT"].includes(r));
 
   const [stats, setStats] = useState({
     totalMembers: 0,
     totalShareCapital: 0,
     totalDeposits: 0,
-    activeLoans: 0
+    activeLoans: 0,
+    thriftDeposit: 0,
+    outstandingLoansAmount: 0
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,32 +26,73 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [membersRes, loansRes, txnsRes, depositsRes] = await Promise.all([
-        API.get("/members"),
-        API.get("/loans"),
-        API.get("/transactions"),
-        API.get("/deposits")
-      ]);
+      if (isAdmin) {
+        // Global administrative metrics
+        const [membersRes, loansRes, txnsRes, depositsRes] = await Promise.all([
+          API.get("/members"),
+          API.get("/loans"),
+          API.get("/transactions"),
+          API.get("/deposits")
+        ]);
 
-      const members = membersRes.data || [];
-      const loans = loansRes.data || [];
-      const txns = txnsRes.data || [];
-      const deposits = depositsRes.data || [];
+        const members = membersRes.data || [];
+        const loans = loansRes.data || [];
+        const txns = txnsRes.data || [];
+        const deposits = depositsRes.data || [];
 
-      const totalShareCapital = members.reduce((sum, m) => sum + (m.shareCapital || 0), 0);
-      const totalDeposits = deposits.reduce((sum, d) => sum + (d.principalAmount || 0), 0);
-      const activeLoansCount = loans.filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED")).length;
+        const totalShareCapital = members.reduce((sum, m) => sum + (m.shareCapital || 0), 0);
+        const totalDeposits = deposits.reduce((sum, d) => sum + (d.principalAmount || 0), 0);
+        const activeLoansCount = loans.filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED")).length;
 
-      setStats({
-        totalMembers: members.length,
-        totalShareCapital,
-        totalDeposits,
-        activeLoans: activeLoansCount
-      });
+        setStats({
+          totalMembers: members.length,
+          totalShareCapital,
+          totalDeposits,
+          activeLoans: activeLoansCount,
+          thriftDeposit: 0,
+          outstandingLoansAmount: 0
+        });
 
-      // Sort by transaction date descending, slice to get top 5
-      const sortedTxns = txns.sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
-      setRecentTransactions(sortedTxns.slice(0, 5));
+        // Sort by transaction date descending, slice to get top 5
+        const sortedTxns = txns.sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
+        setRecentTransactions(sortedTxns.slice(0, 5));
+      } else {
+        // Personalized Member metrics
+        const meRes = await API.get("/members/me");
+        const member = meRes.data;
+
+        if (member && member.id) {
+          const [loansRes, txnsRes, depositsRes] = await Promise.all([
+            API.get("/loans/member/" + member.id),
+            API.get("/transactions/member/" + member.id),
+            API.get("/deposits/member/" + member.id)
+          ]);
+
+          const loans = loansRes.data || [];
+          const txns = txnsRes.data || [];
+          const deposits = depositsRes.data || [];
+
+          // Outstanding loans amount = sum of outstandingPrincipal + outstandingInterest for ACTIVE/APPROVED loans
+          const outstandingLoansAmount = loans
+            .filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED"))
+            .reduce((sum, l) => sum + (l.outstandingPrincipal || 0) + (l.outstandingInterest || 0), 0);
+
+          const totalDeposits = deposits.reduce((sum, d) => sum + (d.principalAmount || 0), 0);
+
+          setStats({
+            totalMembers: 0,
+            totalShareCapital: member.shareCapital || 0,
+            thriftDeposit: member.thriftDeposit || 0,
+            totalDeposits,
+            activeLoans: loans.filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED")).length,
+            outstandingLoansAmount
+          });
+
+          // Sort by transaction date descending, slice to get top 5
+          const sortedTxns = txns.sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
+          setRecentTransactions(sortedTxns.slice(0, 5));
+        }
+      }
     } catch (err) {
       console.error("Error loading dashboard metrics:", err);
     } finally {
@@ -60,6 +107,8 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("roles");
+    localStorage.removeItem("membershipNo");
     navigate("/login");
   };
 
@@ -71,7 +120,7 @@ export default function Dashboard() {
           <div className="logo-box">
             <Landmark size={20} />
           </div>
-          <span>LMS Admin</span>
+          <span>LMS Console</span>
         </div>
 
         <nav className="sidebar-nav">
@@ -79,13 +128,15 @@ export default function Dashboard() {
             <LayoutDashboard size={18} />
             Overview
           </a>
-          <a href="#members" className="nav-item" onClick={() => navigate("/members")}>
-            <Users size={18} />
-            Members
-          </a>
+          {isAdmin && (
+            <a href="#members" className="nav-item" onClick={() => navigate("/members")}>
+              <Users size={18} />
+              Members
+            </a>
+          )}
           <a href="#loans" className="nav-item">
             <CreditCard size={18} />
-            Loans
+            {isAdmin ? "Loans" : "My Loans"}
           </a>
           <a href="#settings" className="nav-item">
             <Settings size={18} />
@@ -129,50 +180,96 @@ export default function Dashboard() {
           <>
             {/* Stats Grid */}
             <div className="dashboard-grid">
-              <div className="stat-card">
-                <div className="stat-icon-wrapper" style={{ background: "rgba(14, 165, 233, 0.1)", color: "#0ea5e9" }}>
-                  <Users size={28} />
-                </div>
-                <div>
-                  <h3>Total Members</h3>
-                  <div className="stat-value">{stats.totalMembers}</div>
-                </div>
-              </div>
+              {isAdmin ? (
+                <>
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(14, 165, 233, 0.1)", color: "#0ea5e9" }}>
+                      <Users size={28} />
+                    </div>
+                    <div>
+                      <h3>Total Members</h3>
+                      <div className="stat-value">{stats.totalMembers}</div>
+                    </div>
+                  </div>
 
-              <div className="stat-card">
-                <div className="stat-icon-wrapper" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}>
-                  <Landmark size={28} />
-                </div>
-                <div>
-                  <h3>Share Capital</h3>
-                  <div className="stat-value">₹{stats.totalShareCapital.toLocaleString('en-IN')}</div>
-                </div>
-              </div>
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}>
+                      <Landmark size={28} />
+                    </div>
+                    <div>
+                      <h3>Share Capital</h3>
+                      <div className="stat-value">₹{stats.totalShareCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
 
-              <div className="stat-card">
-                <div className="stat-icon-wrapper" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}>
-                  <Landmark size={28} />
-                </div>
-                <div>
-                  <h3>Total Deposits</h3>
-                  <div className="stat-value">₹{stats.totalDeposits.toLocaleString('en-IN')}</div>
-                </div>
-              </div>
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}>
+                      <Landmark size={28} />
+                    </div>
+                    <div>
+                      <h3>Total Deposits</h3>
+                      <div className="stat-value">₹{stats.totalDeposits.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
 
-              <div className="stat-card">
-                <div className="stat-icon-wrapper" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}>
-                  <CreditCard size={28} />
-                </div>
-                <div>
-                  <h3>Active Loans</h3>
-                  <div className="stat-value">{stats.activeLoans}</div>
-                </div>
-              </div>
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}>
+                      <CreditCard size={28} />
+                    </div>
+                    <div>
+                      <h3>Active Loans</h3>
+                      <div className="stat-value">{stats.activeLoans}</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(14, 165, 233, 0.1)", color: "#0ea5e9" }}>
+                      <Users size={28} />
+                    </div>
+                    <div>
+                      <h3>My Share Capital</h3>
+                      <div className="stat-value">₹{stats.totalShareCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}>
+                      <Landmark size={28} />
+                    </div>
+                    <div>
+                      <h3>My Thrift Balance</h3>
+                      <div className="stat-value">₹{stats.thriftDeposit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}>
+                      <Landmark size={28} />
+                    </div>
+                    <div>
+                      <h3>My Active Deposits</h3>
+                      <div className="stat-value">₹{stats.totalDeposits.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}>
+                      <CreditCard size={28} />
+                    </div>
+                    <div>
+                      <h3>Outstanding Loans</h3>
+                      <div className="stat-value">₹{stats.outstandingLoansAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Recent Activity */}
             <div className="recent-activity">
-              <h2>Recent Ledger Activity</h2>
+              <h2>{isAdmin ? "Recent Ledger Activity" : "My Recent Ledger Transactions"}</h2>
               {recentTransactions.length === 0 ? (
                 <div className="empty-state">
                   <h3>No transactions recorded.</h3>
