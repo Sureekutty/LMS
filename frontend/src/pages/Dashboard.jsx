@@ -249,8 +249,8 @@ export default function Dashboard() {
           {(isAdmin || isAccountant) && (
             <a
               href="#reports"
-              className={`nav-item ${currentTab === "reports" ? "active" : ""}`}
-              onClick={(e) => { e.preventDefault(); setCurrentTab("reports"); }}
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/reports"); }}
             >
               <Settings size={18} />
               Reports
