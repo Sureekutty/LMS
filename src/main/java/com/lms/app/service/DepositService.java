@@ -94,25 +94,34 @@ public class DepositService {
         }
         deposit.setInterestRate(rate);
 
-        // 5. Calculate maturity amount (Compounded quarterly for FDs, Simple interest for other types like RDs/TDs)
-        BigDecimal interest;
+        // 5. Calculate maturity amount
+        BigDecimal maturityAmount;
         if ("FD".equalsIgnoreCase(depositType.getTypeCode())) {
             // Compound quarterly (compounding frequency = 4)
-            interest = interestCalculationService.calculateCompoundInterest(
+            BigDecimal interest = interestCalculationService.calculateCompoundInterest(
                     deposit.getPrincipalAmount(), 
                     deposit.getInterestRate(), 
                     deposit.getDurationMonths(), 
                     4
             );
-        } else {
-            // Simple interest
-            interest = interestCalculationService.calculateSimpleInterest(
+            maturityAmount = deposit.getPrincipalAmount().add(interest);
+        } else if ("RD".equalsIgnoreCase(depositType.getTypeCode()) || "RCD".equalsIgnoreCase(depositType.getTypeCode())) {
+            // Use legacy multi-bracket compounding formula for RD/RCD
+            maturityAmount = interestCalculationService.calculateRCDMaturity(
                     deposit.getPrincipalAmount(), 
                     deposit.getInterestRate(), 
                     deposit.getDurationMonths()
             );
+        } else {
+            // Simple interest
+            BigDecimal interest = interestCalculationService.calculateSimpleInterest(
+                    deposit.getPrincipalAmount(), 
+                    deposit.getInterestRate(), 
+                    deposit.getDurationMonths()
+            );
+            maturityAmount = deposit.getPrincipalAmount().add(interest);
         }
-        deposit.setMaturityAmount(deposit.getPrincipalAmount().add(interest));
+        deposit.setMaturityAmount(maturityAmount);
         deposit.setStatus("ACTIVE");
 
         return depositRepository.save(deposit);

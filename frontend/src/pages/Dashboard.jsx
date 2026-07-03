@@ -204,6 +204,15 @@ export default function Dashboard() {
             </a>
           )}
 
+          <a
+            href="#deposits"
+            className="nav-item"
+            onClick={(e) => { e.preventDefault(); navigate("/deposits"); }}
+          >
+            <Landmark size={18} />
+            {isMember ? "My Deposits" : "Deposits"}
+          </a>
+
           {(isAdmin || isClerk) && (
             <a
               href="#loans"
