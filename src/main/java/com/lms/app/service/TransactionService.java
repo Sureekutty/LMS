@@ -113,4 +113,8 @@ public class TransactionService {
 
         return savedTxn;
     }
+
+    public List<TransactionType> getAllTransactionTypes() {
+        return transactionTypeRepository.findAll();
+    }
 }
