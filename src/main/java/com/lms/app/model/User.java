@@ -28,6 +28,15 @@ public class User {
     @Column(unique = true, length = 100)
     private String email;
 
+    @Column(name = "first_name", length = 50)
+    private String firstName;
+
+    @Column(name = "last_name", length = 50)
+    private String lastName;
+
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+
     @ManyToOne
     @JoinColumn(name = "member_id")
     private Member member;

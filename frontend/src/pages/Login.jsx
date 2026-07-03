@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowRight,
   BarChart3,
@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   User,
   Wallet,
+  HelpCircle
 } from "lucide-react";
 import api from "../api/axios";
 import "./Login.css";
@@ -22,6 +23,13 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const currentDateStr = new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,10 +110,30 @@ export default function Login() {
 
         <div className="login-wrapper">
           <div className="login-card">
-            <span className="login-eyebrow">
-              <ShieldCheck size={13} />
-              Secure Gateway
-            </span>
+            <div className="marquee-wrapper">
+              <marquee className="lms-marquee" behavior="scroll" direction="left">
+                Welcome to LMS • Manage your credits easily
+              </marquee>
+            </div>
+            
+            <div className="login-header-row">
+              <span className="login-eyebrow">
+                <ShieldCheck size={13} />
+                Secure Gateway
+              </span>
+              <a 
+                href="/assets/user_guide.pdf" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="guide-help-link"
+                title="Open Guide Document"
+              >
+                <HelpCircle size={18} />
+              </a>
+            </div>
+
+            <div className="date-display">{currentDateStr}</div>
+            
             <h2>Welcome back</h2>
             <p>Sign in to continue to your dashboard</p>
 
@@ -145,6 +173,9 @@ export default function Login() {
                 )}
               </button>
             </form>
+            <div className="login-footer">
+              Don't have an id? <Link to="/register">Register (New Id creation)</Link>
+            </div>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import "./Members.css";
 
@@ -21,6 +22,7 @@ const emptyForm = {
 };
 
 function Members() {
+  const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,6 +44,12 @@ function Members() {
   };
 
   useEffect(() => {
+    const roles = JSON.parse(localStorage.getItem("roles") || "[]");
+    const isAuthorized = roles.some(r => ["ROLE_ADMIN", "ROLE_CLERK"].includes(r));
+    if (!isAuthorized) {
+      navigate("/dashboard");
+      return;
+    }
     fetchMembers();
   }, []);
 

@@ -10,7 +10,26 @@ export default function Dashboard() {
   
   // Role Parsing
   const roles = JSON.parse(localStorage.getItem("roles") || "[]");
-  const isAdmin = roles.length === 0 || roles.some(r => ["ROLE_ADMIN", "ROLE_CLERK", "ROLE_ACCOUNTANT"].includes(r));
+  const isAdmin = roles.includes("ROLE_ADMIN");
+  const isClerk = roles.includes("ROLE_CLERK");
+  const isAccountant = roles.includes("ROLE_ACCOUNTANT");
+  const isMember = roles.includes("ROLE_MEMBER") || (!isAdmin && !isClerk && !isAccountant);
+
+  const [currentTab, setCurrentTab] = useState("overview");
+
+  // Add Staff State
+  const [newStaff, setNewStaff] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "CLERK",
+    adminPassword: ""
+  });
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
 
   const [stats, setStats] = useState({
     totalMembers: 0,
@@ -112,6 +131,47 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  const handleAddStaff = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+
+    if (newStaff.password !== newStaff.confirmPassword) {
+      setFormError("Passwords do not match!");
+      return;
+    }
+
+    setFormLoading(true);
+    try {
+      const payload = {
+        username: newStaff.email,
+        email: newStaff.email,
+        firstName: newStaff.firstName,
+        lastName: newStaff.lastName,
+        displayName: newStaff.firstName + " " + newStaff.lastName,
+        password: newStaff.password,
+        roles: [newStaff.role],
+        adminPassword: newStaff.adminPassword
+      };
+
+      await API.post("/auth/register", payload);
+      setFormSuccess("Staff/Admin user registered successfully!");
+      setNewStaff({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "CLERK",
+        adminPassword: ""
+      });
+    } catch (err) {
+      setFormError(err.response?.data?.message || "Failed to create staff account.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-layout">
       {/* Sidebar */}
@@ -124,24 +184,80 @@ export default function Dashboard() {
         </div>
 
         <nav className="sidebar-nav">
-          <a href="#overview" className="nav-item active">
+          <a
+            href="#overview"
+            className={`nav-item ${currentTab === "overview" ? "active" : ""}`}
+            onClick={(e) => { e.preventDefault(); setCurrentTab("overview"); }}
+          >
             <LayoutDashboard size={18} />
             Overview
           </a>
-          {isAdmin && (
-            <a href="#members" className="nav-item" onClick={() => navigate("/members")}>
+
+          {(isAdmin || isClerk) && (
+            <a
+              href="#members"
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/members"); }}
+            >
               <Users size={18} />
               Members
             </a>
           )}
-          <a href="#loans" className="nav-item">
-            <CreditCard size={18} />
-            {isAdmin ? "Loans" : "My Loans"}
-          </a>
-          <a href="#settings" className="nav-item">
-            <Settings size={18} />
-            Settings
-          </a>
+
+          {(isAdmin || isClerk) && (
+            <a
+              href="#loans"
+              className={`nav-item ${currentTab === "loans" ? "active" : ""}`}
+              onClick={(e) => { e.preventDefault(); setCurrentTab("loans"); }}
+            >
+              <CreditCard size={18} />
+              Loans
+            </a>
+          )}
+
+          {isMember && (
+            <a
+              href="#my-loans"
+              className={`nav-item ${currentTab === "loans" ? "active" : ""}`}
+              onClick={(e) => { e.preventDefault(); setCurrentTab("loans"); }}
+            >
+              <CreditCard size={18} />
+              My Loans
+            </a>
+          )}
+
+          {(isAdmin || isClerk || isAccountant) && (
+            <a
+              href="#payments"
+              className={`nav-item ${currentTab === "payments" ? "active" : ""}`}
+              onClick={(e) => { e.preventDefault(); setCurrentTab("payments"); }}
+            >
+              <Landmark size={18} />
+              Payments
+            </a>
+          )}
+
+          {(isAdmin || isAccountant) && (
+            <a
+              href="#reports"
+              className={`nav-item ${currentTab === "reports" ? "active" : ""}`}
+              onClick={(e) => { e.preventDefault(); setCurrentTab("reports"); }}
+            >
+              <Settings size={18} />
+              Reports
+            </a>
+          )}
+
+          {isAdmin && (
+            <a
+              href="#settings"
+              className={`nav-item ${currentTab === "settings" ? "active" : ""}`}
+              onClick={(e) => { e.preventDefault(); setCurrentTab("settings"); }}
+            >
+              <Settings size={18} />
+              Settings
+            </a>
+          )}
         </nav>
 
         <div className="sidebar-footer">
@@ -175,6 +291,108 @@ export default function Dashboard() {
           <div className="empty-state">
             <RefreshCw size={36} className="spin-sync-icon" />
             <h3 style={{ marginTop: 15 }}>Syncing Ledger Data...</h3>
+          </div>
+        ) : currentTab === "settings" ? (
+          <div className="settings-panel">
+            <h2>Account Settings & System Controls</h2>
+            
+            {isAdmin && (
+              <div className="settings-section">
+                <h3>System Controls: Add Staff/Admin Account</h3>
+                <p>Register new Admins, Accountants, or Clerks by confirming the master password.</p>
+
+                <form onSubmit={handleAddStaff} className="settings-form">
+                  <div className="form-row">
+                    <label>
+                      <span>First Name</span>
+                      <input
+                        type="text"
+                        placeholder="First Name"
+                        value={newStaff.firstName}
+                        onChange={(e) => setNewStaff({ ...newStaff, firstName: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>Last Name</span>
+                      <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={newStaff.lastName}
+                        onChange={(e) => setNewStaff({ ...newStaff, lastName: e.target.value })}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row">
+                    <label>
+                      <span>Email / Username</span>
+                      <input
+                        type="email"
+                        placeholder="Email ID"
+                        value={newStaff.email}
+                        onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>Target System Role</span>
+                      <select
+                        value={newStaff.role}
+                        onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value })}
+                        required
+                      >
+                        <option value="CLERK">Clerk</option>
+                        <option value="ACCOUNTANT">Accountant</option>
+                        <option value="ADMIN">Administrator</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="form-row">
+                    <label>
+                      <span>Password</span>
+                      <input
+                        type="password"
+                        placeholder="Password"
+                        value={newStaff.password}
+                        onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>Confirm Password</span>
+                      <input
+                        type="password"
+                        placeholder="Confirm Password"
+                        value={newStaff.confirmPassword}
+                        onChange={(e) => setNewStaff({ ...newStaff, confirmPassword: e.target.value })}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <label className="admin-password-label">
+                    <span>Enter Master Admin Password to Authorize</span>
+                    <input
+                      type="password"
+                      placeholder="Master Admin Password"
+                      value={newStaff.adminPassword}
+                      onChange={(e) => setNewStaff({ ...newStaff, adminPassword: e.target.value })}
+                      required
+                    />
+                  </label>
+
+                  {formError && <div className="form-error-msg">{formError}</div>}
+                  {formSuccess && <div className="form-success-msg">{formSuccess}</div>}
+
+                  <button type="submit" disabled={formLoading} className="settings-submit-btn">
+                    {formLoading ? "Creating Account..." : "Create Staff Account"}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         ) : (
           <>
