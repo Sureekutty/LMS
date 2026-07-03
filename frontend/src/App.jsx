@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Deposits from './pages/Deposits';
 import Payments from './pages/Payments';
 import Reports from './pages/Reports';
+import Loans from './pages/Loans';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -42,6 +43,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/loans"
+          element={
+            <ProtectedRoute>
+              <Loans />
             </ProtectedRoute>
           }
         />

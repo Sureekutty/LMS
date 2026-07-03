@@ -216,8 +216,8 @@ export default function Dashboard() {
           {(isAdmin || isClerk) && (
             <a
               href="#loans"
-              className={`nav-item ${currentTab === "loans" ? "active" : ""}`}
-              onClick={(e) => { e.preventDefault(); setCurrentTab("loans"); }}
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/loans"); }}
             >
               <CreditCard size={18} />
               Loans
@@ -227,8 +227,8 @@ export default function Dashboard() {
           {isMember && (
             <a
               href="#my-loans"
-              className={`nav-item ${currentTab === "loans" ? "active" : ""}`}
-              onClick={(e) => { e.preventDefault(); setCurrentTab("loans"); }}
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/loans"); }}
             >
               <CreditCard size={18} />
               My Loans
