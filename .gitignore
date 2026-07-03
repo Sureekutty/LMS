@@ -28,3 +28,7 @@ logs/
 
 # ===== DOCUMENTATION (NEVER UPLOAD) =====
 LMS_*.html
+
+# ===== AGENT WORKSPACE STUFF =====
+.agents/
+scratch/

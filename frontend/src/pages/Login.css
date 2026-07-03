@@ -643,3 +643,63 @@ body {
   .login-card { padding: 28px 20px; }
   .mini-stats { grid-template-columns: repeat(3, 1fr); }
 }
+
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--muted-light);
+  text-align: center;
+}
+
+.login-footer a {
+  color: var(--teal-dark);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+.marquee-wrapper {
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.lms-marquee {
+  color: var(--teal-dark);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.login-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.guide-help-link {
+  color: var(--muted-light);
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.guide-help-link:hover {
+  color: var(--teal-dark);
+}
+
+.date-display {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted-light);
+  margin-bottom: 1.25rem;
+  text-align: left;
+}

@@ -41,11 +41,32 @@ public class UserService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : (request.getFirstName() + " " + request.getLastName()));
         // Encrypt password — never store plain text!
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         // Assign roles
         Set<Role> roles = new HashSet<>();
+        boolean hasPrivilegedRole = false;
+        
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            for (String roleName : request.getRoles()) {
+                String normalized = roleName.toUpperCase();
+                if (normalized.contains("ADMIN") || normalized.contains("ACCOUNTANT") || normalized.contains("CLERK")) {
+                    hasPrivilegedRole = true;
+                }
+            }
+        }
+
+        if (hasPrivilegedRole) {
+            // Require verification against the master admin secret "admin@123"
+            if (request.getAdminPassword() == null || !request.getAdminPassword().equals("admin@123")) {
+                throw new RuntimeException("Invalid Admin Password! Unauthorized to create privileged accounts.");
+            }
+        }
+
         if (request.getRoles() == null || request.getRoles().isEmpty()) {
             // Default role is MEMBER
             Role memberRole = roleRepository.findByName("ROLE_MEMBER")

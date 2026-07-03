@@ -1,6 +1,7 @@
 package com.lms.app.service;
 
 import com.lms.app.model.InterestRate;
+import com.lms.app.model.LoanRepayment;
 import com.lms.app.repository.InterestRateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InterestCalculationService {
@@ -90,5 +93,104 @@ public class InterestCalculationService {
         double interest = amount - p;
 
         return BigDecimal.valueOf(interest).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculate RCD (Recurring Deposit) Compounding Maturity value based on legacy SP_Calculations.sql brackets.
+     */
+    public BigDecimal calculateRCDMaturity(BigDecimal amount, BigDecimal annualRate, Integer durationMonths) {
+        if (amount == null || annualRate == null || durationMonths == null || durationMonths <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        double p = amount.doubleValue();
+        double r = annualRate.doubleValue();
+        int dur = durationMonths;
+
+        double m1 = 0;
+        double m2 = 0;
+        double m3 = 0;
+        double m4 = 0;
+        double m5 = 0;
+        double maturity = 0;
+
+        if (dur <= 12) {
+            m1 = (p * r * (dur * (dur + 1))) / 2400.0;
+            maturity = m1 + (dur * p);
+        } else if (dur <= 24) {
+            m1 = (p * r * (12 * 13)) / 2400.0;
+            m2 = ((p * r * ((dur - 12) * (dur - 12 + 1))) / 2400.0) + (((m1 + 12 * p) * r * (dur - 12)) / 1200.0);
+            maturity = m1 + m2 + (dur * p);
+        } else if (dur <= 36) {
+            m1 = (p * r * (12 * 13)) / 2400.0;
+            m2 = (p * r * (12 * 13)) / 2400.0 + ((m1 + 12 * p) * r) / 100.0;
+            m3 = ((p * r * ((dur - 24) * (dur - 24 + 1))) / 2400.0) + (((m1 + m2 + 24 * p) * r * (dur - 24)) / 1200.0);
+            maturity = m1 + m2 + m3 + (dur * p);
+        } else if (dur <= 48) {
+            m1 = (p * r * (12 * 13)) / 2400.0;
+            m2 = (p * r * (12 * 13)) / 2400.0 + ((m1 + 12 * p) * r) / 100.0;
+            m3 = (p * r * (12 * 13)) / 2400.0 + ((m1 + m2 + 24 * p) * r) / 100.0;
+            m4 = ((p * r * ((dur - 36) * (dur - 36 + 1))) / 2400.0) + (((m1 + m2 + m3 + 36 * p) * r * (dur - 36)) / 1200.0);
+            maturity = m1 + m2 + m3 + m4 + (dur * p);
+        } else { // 49 to 60 or more
+            m1 = (p * r * (12 * 13)) / 2400.0;
+            m2 = (p * r * (12 * 13)) / 2400.0 + ((m1 + 12 * p) * r) / 100.0;
+            m3 = (p * r * (12 * 13)) / 2400.0 + ((m1 + m2 + 24 * p) * r) / 100.0;
+            m4 = (p * r * (12 * 13)) / 2400.0 + ((m1 + m2 + m3 + 36 * p) * r) / 100.0;
+            m5 = ((p * r * ((dur - 48) * (dur - 48 + 1))) / 2400.0) + (((m1 + m2 + m3 + m4 + 48 * p) * r * (dur - 48)) / 1200.0);
+            maturity = Math.round(m1 + m2 + m3 + m4 + m5 + (dur * p));
+        }
+
+        return BigDecimal.valueOf(maturity).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculate daily-weighted interest for a loan over a calendar month, matching SP_getIntAmount.sql.
+     */
+    public BigDecimal calculateLoanInterestForMonth(
+            BigDecimal amountSanctioned,
+            BigDecimal annualRate,
+            LocalDate disbursedDate,
+            LocalDate monthStart,
+            List<LoanRepayment> repayments,
+            BigDecimal prevMonthEndingPrincipal) {
+
+        if (annualRate == null || annualRate.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        int daysInMonth = monthStart.lengthOfMonth();
+        BigDecimal totalInterest = BigDecimal.ZERO;
+        BigDecimal dailyRate = annualRate.divide(BigDecimal.valueOf(12 * 100 * daysInMonth), 10, RoundingMode.HALF_UP);
+
+        // Calculate active principal balance for each day of the month
+        for (int day = 1; day <= daysInMonth; day++) {
+            LocalDate currentDay = monthStart.withDayOfMonth(day);
+            BigDecimal principalOnDay = BigDecimal.ZERO;
+
+            if (disbursedDate != null && !currentDay.isBefore(disbursedDate)) {
+                // If disbursed during this month, start with amountSanctioned
+                principalOnDay = prevMonthEndingPrincipal != null && prevMonthEndingPrincipal.compareTo(BigDecimal.ZERO) > 0 
+                        ? prevMonthEndingPrincipal 
+                        : amountSanctioned;
+
+                // Check if any repayments happened on or before currentDay in this month
+                LocalDate finalCurrentDay = currentDay;
+                Optional<LoanRepayment> lastRepaymentBeforeOrOnDay = repayments.stream()
+                        .filter(r -> !r.getPaidDate().isAfter(finalCurrentDay))
+                        .reduce((first, second) -> second); // Get the last repayment up to this day
+
+                if (lastRepaymentBeforeOrOnDay.isPresent()) {
+                    principalOnDay = lastRepaymentBeforeOrOnDay.get().getClosingBalance();
+                }
+            }
+
+            if (principalOnDay.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal dayInterest = principalOnDay.multiply(dailyRate);
+                totalInterest = totalInterest.add(dayInterest);
+            }
+        }
+
+        return totalInterest.setScale(2, RoundingMode.HALF_UP);
     }
 }
