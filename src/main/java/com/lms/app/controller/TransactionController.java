@@ -2,6 +2,7 @@ package com.lms.app.controller;
 
 import com.lms.app.dto.ApiResponse;
 import com.lms.app.model.Transaction;
+import com.lms.app.model.TransactionType;
 import com.lms.app.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -60,5 +61,11 @@ public class TransactionController {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
         }
+    }
+
+    @GetMapping("/types")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    public ResponseEntity<List<TransactionType>> getAllTransactionTypes() {
+        return ResponseEntity.ok(transactionService.getAllTransactionTypes());
     }
 }

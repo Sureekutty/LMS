@@ -238,8 +238,8 @@ export default function Dashboard() {
           {(isAdmin || isClerk || isAccountant) && (
             <a
               href="#payments"
-              className={`nav-item ${currentTab === "payments" ? "active" : ""}`}
-              onClick={(e) => { e.preventDefault(); setCurrentTab("payments"); }}
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/payments"); }}
             >
               <Landmark size={18} />
               Payments

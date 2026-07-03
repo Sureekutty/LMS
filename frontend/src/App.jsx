@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Deposits from './pages/Deposits';
+import Payments from './pages/Payments';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,6 +25,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Deposits />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute>
+              <Payments />
             </ProtectedRoute>
           }
         />
