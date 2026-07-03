@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Landmark, ArrowRight, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Landmark, ArrowRight, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye } from "lucide-react";
 import API from "../api/axios";
 import "./Deposits.css";
 
@@ -11,10 +12,12 @@ const emptyForm = {
 };
 
 export default function Deposits() {
+  const navigate = useNavigate();
   const [deposits, setDeposits] = useState([]);
   const [members, setMembers] = useState([]);
   const [depositTypes, setDepositTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -154,6 +157,10 @@ export default function Deposits() {
 
   return (
     <main className="deposits-page">
+      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
       <header className="page-header">
         <div>
           <h1>Deposits & Savings</h1>
@@ -283,7 +290,7 @@ export default function Deposits() {
                   <th>Maturity Date</th>
                   <th>Maturity Value</th>
                   <th>Status</th>
-                  {(isAdmin || isClerk) && <th>Actions</th>}
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,15 +308,18 @@ export default function Deposits() {
                         {d.status}
                       </span>
                     </td>
-                    {(isAdmin || isClerk) && (
-                      <td>
-                        {d.status === "ACTIVE" && (
+                    <td>
+                      <div className="action-row" style={{ display: "flex", gap: 10 }}>
+                        <button className="close-btn" onClick={() => setSelectedDeposit(d)} title="Inspect Account Details" style={{ color: "#0ea5e9" }}>
+                          <Eye size={16} />
+                        </button>
+                        {d.status === "ACTIVE" && (isAdmin || isClerk) && (
                           <button className="close-btn" onClick={() => handleCloseDeposit(d.id)} title="Liquidate Account">
                             <XCircle size={16} />
                           </button>
                         )}
-                      </td>
-                    )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -317,6 +327,30 @@ export default function Deposits() {
           </div>
         )}
       </section>
+
+      {/* Selected Deposit Detailed Modal */}
+      {selectedDeposit && (
+        <div className="modal-overlay" onClick={() => setSelectedDeposit(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Deposit Account Inspector</h3>
+            <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, margin: "20px 0", textAlign: "left", fontSize: "0.95rem" }}>
+              <div><strong>Account No:</strong> {selectedDeposit.depositNo}</div>
+              <div><strong>Member:</strong> {selectedDeposit.member?.name} ({selectedDeposit.member?.membershipNo})</div>
+              <div><strong>Deposit Scheme:</strong> {selectedDeposit.depositType?.typeName} ({selectedDeposit.depositType?.typeCode})</div>
+              <div><strong>Interest Rate:</strong> {selectedDeposit.interestRate}%</div>
+              <div><strong>Principal Balance:</strong> ₹{selectedDeposit.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+              <div><strong>Maturity Value:</strong> ₹{selectedDeposit.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+              <div><strong>Open Date:</strong> {new Date(selectedDeposit.openDate).toLocaleDateString("en-IN")}</div>
+              <div><strong>Maturity Date:</strong> {new Date(selectedDeposit.maturityDate).toLocaleDateString("en-IN")}</div>
+              <div><strong>Tenure:</strong> {selectedDeposit.durationMonths} Months</div>
+              <div><strong>Account Status:</strong> <span className={`status-badge ${selectedDeposit.status?.toLowerCase()}`}>{selectedDeposit.status}</span></div>
+            </div>
+            <div className="modal-actions">
+              <button className="cancel-btn" onClick={() => setSelectedDeposit(null)}>Close Inspector</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

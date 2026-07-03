@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Landmark, PlusCircle, RefreshCw, XCircle, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Landmark, PlusCircle, RefreshCw, XCircle, ArrowDownCircle, ArrowUpCircle, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
 import "./Payments.css";
 
@@ -13,6 +14,7 @@ const emptyForm = {
 };
 
 export default function Payments() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [members, setMembers] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
@@ -108,6 +110,10 @@ export default function Payments() {
 
   return (
     <main className="payments-page">
+      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
       <header className="page-header">
         <div>
           <h1>Payments & Receipts Ledger</h1>

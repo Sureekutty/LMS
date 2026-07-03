@@ -139,4 +139,8 @@ public class DepositService {
         deposit.setStatus("CLOSED");
         return depositRepository.save(deposit);
     }
+
+    public List<DepositType> getAllDepositTypes() {
+        return depositTypeRepository.findAll();
+    }
 }

@@ -2,6 +2,7 @@ package com.lms.app.controller;
 
 import com.lms.app.dto.ApiResponse;
 import com.lms.app.model.Deposit;
+import com.lms.app.model.DepositType;
 import com.lms.app.service.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,12 @@ public class DepositController {
     @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
     public ResponseEntity<List<Deposit>> getAllDeposits() {
         return ResponseEntity.ok(depositService.getAllDeposits());
+    }
+
+    @GetMapping("/types")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    public ResponseEntity<List<DepositType>> getAllDepositTypes() {
+        return ResponseEntity.ok(depositService.getAllDepositTypes());
     }
 
     @GetMapping("/{id}")

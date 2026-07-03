@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Eye } from "lucide-react";
 import API from "../api/axios";
 import "./Members.css";
 
@@ -29,6 +30,7 @@ function Members() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -119,6 +121,10 @@ function Members() {
 
   return (
     <div className="members-page">
+      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
       <div className="members-header">
         <h1>Members</h1>
         <button className="btn-primary" onClick={openAddForm}>
@@ -163,6 +169,9 @@ function Members() {
                       </span>
                     </td>
                     <td>
+                      <button className="btn-link view-btn" onClick={() => setSelectedMember(m)} style={{ marginRight: 10, display: "inline-flex", alignItems: "center" }}>
+                        <Eye size={14} style={{ marginRight: 4 }} /> View
+                      </button>
                       <button className="btn-link" onClick={() => openEditForm(m)}>
                         Edit
                       </button>
@@ -259,6 +268,36 @@ function Members() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {selectedMember && (
+        <div className="modal-overlay" onClick={() => setSelectedMember(null)}>
+          <div className="modal-box details-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+            <h2>Member Ledger Inspector</h2>
+            <p className="subtitle">Inspecting details for: <strong>{selectedMember.name}</strong></p>
+
+            <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, margin: "20px 0", textAlign: "left" }}>
+              <div><strong>Membership No:</strong> {selectedMember.membershipNo}</div>
+              <div><strong>Staff Code:</strong> {selectedMember.staffCode || "N/A"}</div>
+              <div><strong>Designation:</strong> {selectedMember.designation || "N/A"}</div>
+              <div><strong>Father/Husband Name:</strong> {selectedMember.fatherHusbandName || "N/A"}</div>
+              <div><strong>Section / Division:</strong> {selectedMember.sectionDivision || "N/A"}</div>
+              <div><strong>Phone No:</strong> {selectedMember.phoneNo || "N/A"}</div>
+              <div><strong>Age:</strong> {selectedMember.age || "N/A"}</div>
+              <div><strong>Date of Birth:</strong> {selectedMember.dateOfBirth || "N/A"}</div>
+              <div><strong>Date of Joining:</strong> {selectedMember.dateOfJoining || "N/A"}</div>
+              <div><strong>Bank Account No:</strong> {selectedMember.bankAccountNo || "N/A"}</div>
+              <div><strong>Share Capital Balance:</strong> ₹{selectedMember.shareCapital?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div><strong>Thrift Deposit Balance:</strong> ₹{selectedMember.thriftDeposit?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ gridColumn: "span 2" }}><strong>Residential Address:</strong> {selectedMember.residentialAddress || "N/A"}</div>
+            </div>
+
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setSelectedMember(null)}>
+                Close Inspector
+              </button>
+            </div>
           </div>
         </div>
       )}
