@@ -6,6 +6,7 @@ import Deposits from './pages/Deposits';
 import Payments from './pages/Payments';
 import Reports from './pages/Reports';
 import Loans from './pages/Loans';
+import Audits from './pages/Audits';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -51,6 +52,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Loans />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audits"
+          element={
+            <ProtectedRoute>
+              <Audits />
             </ProtectedRoute>
           }
         />
