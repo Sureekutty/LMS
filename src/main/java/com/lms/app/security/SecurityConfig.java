@@ -80,7 +80,7 @@ public class SecurityConfig {
                 // Admin only
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Member endpoints
-                .requestMatchers("/api/members/**").hasAnyRole("ADMIN", "CLERK")
+                .requestMatchers("/api/members/**").hasAnyRole("ADMIN", "CLERK", "ACCOUNTANT", "MEMBER")
                 // Loan endpoints
                 .requestMatchers("/api/loans/**")
                     .hasAnyRole("ADMIN", "CLERK", "ACCOUNTANT", "MEMBER")
