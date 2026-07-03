@@ -7,6 +7,7 @@ import Payments from './pages/Payments';
 import Reports from './pages/Reports';
 import Loans from './pages/Loans';
 import Audits from './pages/Audits';
+import Members from './pages/Members';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <ProtectedRoute>
+              <Members />
             </ProtectedRoute>
           }
         />
