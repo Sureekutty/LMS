@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, Users, CreditCard, LogOut, LayoutDashboard, Settings, Bell, RefreshCw } from "lucide-react";
+import { Landmark, Users, CreditCard, LogOut, LayoutDashboard, Settings, Bell, RefreshCw, ShieldAlert } from "lucide-react";
 import API from "../api/axios";
 import "./Dashboard.css";
 
@@ -265,6 +265,17 @@ export default function Dashboard() {
             >
               <Settings size={18} />
               Settings
+            </a>
+          )}
+
+          {isAdmin && (
+            <a
+              href="#audits"
+              className="nav-item"
+              onClick={(e) => { e.preventDefault(); navigate("/audits"); }}
+            >
+              <ShieldAlert size={18} />
+              Audit Logs
             </a>
           )}
         </nav>
