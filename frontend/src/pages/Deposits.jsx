@@ -18,6 +18,8 @@ export default function Deposits() {
   const [depositTypes, setDepositTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -143,6 +145,45 @@ export default function Deposits() {
     }
   };
 
+  const handleBulkThriftUpload = async (e) => {
+    e.preventDefault();
+    if (!bulkText.trim()) return;
+    setBulkLoading(true);
+    try {
+      const lines = bulkText.split("\n");
+      const records = lines
+        .map(line => {
+          const parts = line.split(",");
+          if (parts.length < 2) return null;
+          const codeOrNo = parts[0].trim();
+          const amt = parseFloat(parts[1].trim());
+          if (!codeOrNo || isNaN(amt)) return null;
+
+          return {
+            staffCode: codeOrNo.startsWith("MEM") ? "" : codeOrNo,
+            membershipNo: codeOrNo.startsWith("MEM") ? codeOrNo : "",
+            amount: amt
+          };
+        })
+        .filter(Boolean);
+
+      if (records.length === 0) {
+        alert("No valid records found. Format: Code,Amount (e.g. SC101,150.00)");
+        setBulkLoading(false);
+        return;
+      }
+
+      await API.post("/deposits/upload-thrift", records);
+      alert("Successfully posted bulk Thrift subscriptions!");
+      setBulkText("");
+      fetchInitialData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to process bulk thrift upload.");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const handleCloseDeposit = async (id) => {
     if (!window.confirm("Are you sure you want to close/liquidate this deposit account?")) {
       return;
@@ -203,6 +244,30 @@ export default function Deposits() {
           </div>
         </div>
       </section>
+
+      {/* Thrift Uploading console for Admin and Clerks */}
+      {(isAdmin || isClerk) && (
+        <section className="calculator-section" style={{ marginTop: 25 }}>
+          <h3>Bulk Thrift Uploading Dispatcher</h3>
+          <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: 12 }}>
+            Input bulk subscription updates. Paste CSV rows in format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
+          </p>
+          <form onSubmit={handleBulkThriftUpload}>
+            <textarea
+              placeholder="SC101,150.00&#10;MEM001,200.00"
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              style={{ width: "100%", height: 110, padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, fontFamily: "monospace", fontSize: "0.95rem" }}
+              required
+            />
+            <div style={{ marginTop: 10, textAlign: "right" }}>
+              <button type="submit" disabled={bulkLoading} className="open-form-btn" style={{ padding: "10px 20px" }}>
+                {bulkLoading ? "Posting Subscriptions..." : "Post Bulk Subscriptions"}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {/* Open Deposit Account Form */}
       {showForm && (

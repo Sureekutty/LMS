@@ -119,6 +119,23 @@ function Members() {
     }
   };
 
+  const downloadPdf = async (id, membershipNo) => {
+    try {
+      const response = await API.get(`/members/${id}/statement/pdf`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `statement_${membershipNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert("Failed to download member statement PDF.");
+    }
+  };
+
   const handleDeactivate = async (id) => {
     if (!window.confirm("Deactivate this member?")) return;
     try {
@@ -336,7 +353,10 @@ function Members() {
               <div style={{ gridColumn: "span 2" }}><strong>Nominee Address:</strong> {selectedMember.nomineeAddress || "N/A"}</div>
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions" style={{ display: "flex", gap: 15, justifyContent: "flex-end" }}>
+              <button type="button" className="btn-primary" onClick={() => downloadPdf(selectedMember.id, selectedMember.membershipNo)}>
+                Dispatch Statement (PDF)
+              </button>
               <button type="button" className="btn-secondary" onClick={() => setSelectedMember(null)}>
                 Close Inspector
               </button>

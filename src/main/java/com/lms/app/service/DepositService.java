@@ -3,11 +3,13 @@ package com.lms.app.service;
 import com.lms.app.model.Deposit;
 import com.lms.app.model.DepositType;
 import com.lms.app.model.Member;
+import com.lms.app.dto.ThriftUploadRecord;
 import com.lms.app.repository.DepositRepository;
 import com.lms.app.repository.DepositTypeRepository;
 import com.lms.app.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -142,5 +144,23 @@ public class DepositService {
 
     public List<DepositType> getAllDepositTypes() {
         return depositTypeRepository.findAll();
+    }
+
+    @Transactional
+    public void processThriftBulkUpload(List<ThriftUploadRecord> records) {
+        for (ThriftUploadRecord record : records) {
+            Optional<Member> memberOpt = Optional.empty();
+            if (record.getStaffCode() != null && !record.getStaffCode().trim().isEmpty()) {
+                memberOpt = memberRepository.findByStaffCode(record.getStaffCode());
+            }
+            if (memberOpt.isEmpty() && record.getMembershipNo() != null && !record.getMembershipNo().trim().isEmpty()) {
+                memberOpt = memberRepository.findByMembershipNo(record.getMembershipNo());
+            }
+
+            Member member = memberOpt.orElseThrow(() -> new RuntimeException("Member not found for staffCode: " + record.getStaffCode() + " / membershipNo: " + record.getMembershipNo()));
+            BigDecimal newBal = member.getThriftDeposit() != null ? member.getThriftDeposit().add(record.getAmount()) : record.getAmount();
+            member.setThriftDeposit(newBal);
+            memberRepository.save(member);
+        }
     }
 }

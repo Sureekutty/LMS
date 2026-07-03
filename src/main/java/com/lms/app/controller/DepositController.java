@@ -1,6 +1,7 @@
 package com.lms.app.controller;
 
 import com.lms.app.dto.ApiResponse;
+import com.lms.app.dto.ThriftUploadRecord;
 import com.lms.app.model.Deposit;
 import com.lms.app.model.DepositType;
 import com.lms.app.service.DepositService;
@@ -66,6 +67,17 @@ public class DepositController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/upload-thrift")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK')")
+    public ResponseEntity<?> uploadThriftBulk(@RequestBody List<ThriftUploadRecord> records) {
+        try {
+            depositService.processThriftBulkUpload(records);
+            return ResponseEntity.ok(new ApiResponse(true, "Bulk thrift subscriptions posted successfully."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }
     }
 }
