@@ -101,6 +101,21 @@ public class Member {
     @Column(name = "closed_date")
     private LocalDateTime closedDate;
 
+    @Column(name = "nominee_name", length = 100)
+    private String nomineeName;
+
+    @Column(name = "nominee_dob")
+    private LocalDate nomineeDob;
+
+    @Column(name = "nominee_relationship", length = 50)
+    private String nomineeRelationship;
+
+    @Column(name = "nominee_gender", length = 20)
+    private String nomineeGender;
+
+    @Column(name = "nominee_address", columnDefinition = "TEXT")
+    private String nomineeAddress;
+
     @Column(length = 250)
     private String remarks;
 

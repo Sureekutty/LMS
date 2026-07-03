@@ -10,6 +10,9 @@ const emptyForm = {
   amountRequested: "",
   durationMonths: "12",
   purpose: "",
+  surety1: "",
+  surety2: "",
+  surety3: "",
 };
 
 export default function Loans() {
@@ -211,6 +214,37 @@ export default function Loans() {
               <input type="text" placeholder="Medical, housing, education..." value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} required />
             </label>
 
+            {/* Surety/Guarantors section */}
+            <div className="form-row" style={{ marginTop: 15, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 15 }}>
+              <label>
+                <span>Surety 1 (Guarantor)</span>
+                <select value={form.surety1} onChange={(e) => setForm({ ...form, surety1: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}>
+                  <option value="">-- Select --</option>
+                  {members.filter(m => m.id != form.memberId).map(m => (
+                    <option key={m.id} value={m.membershipNo}>{m.name} ({m.membershipNo})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Surety 2 (Guarantor)</span>
+                <select value={form.surety2} onChange={(e) => setForm({ ...form, surety2: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}>
+                  <option value="">-- Select --</option>
+                  {members.filter(m => m.id != form.memberId).map(m => (
+                    <option key={m.id} value={m.membershipNo}>{m.name} ({m.membershipNo})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Surety 3 (Guarantor)</span>
+                <select value={form.surety3} onChange={(e) => setForm({ ...form, surety3: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}>
+                  <option value="">-- Select --</option>
+                  {members.filter(m => m.id != form.memberId).map(m => (
+                    <option key={m.id} value={m.membershipNo}>{m.name} ({m.membershipNo})</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
             {formSuccess && <div className="form-success-msg">{formSuccess}</div>}
             {error && <div className="form-error-msg">{error}</div>}
 
@@ -363,6 +397,10 @@ export default function Loans() {
               <div><strong>Sanction Date:</strong> {selectedLoan.sanctionedDate ? new Date(selectedLoan.sanctionedDate).toLocaleDateString("en-IN") : "N/A"}</div>
               <div><strong>Disbursed By:</strong> {selectedLoan.disbursedBy || "N/A"}</div>
               <div><strong>Status:</strong> <span className={`status-badge ${selectedLoan.status?.toLowerCase()}`}>{selectedLoan.status}</span></div>
+              <h3 style={{ marginTop: 15, borderBottom: "1px solid #cbd5e1", paddingBottom: 5, color: "#1e293b", fontSize: "1.05rem" }}>Guarantors (Sureties)</h3>
+              <div><strong>Surety 1 (Guarantor):</strong> {selectedLoan.surety1 || "None Assigned"}</div>
+              <div><strong>Surety 2 (Guarantor):</strong> {selectedLoan.surety2 || "None Assigned"}</div>
+              <div><strong>Surety 3 (Guarantor):</strong> {selectedLoan.surety3 || "None Assigned"}</div>
             </div>
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setSelectedLoan(null)}>Close Inspector</button>

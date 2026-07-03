@@ -82,6 +82,15 @@ public class Loan {
     @Column(name = "cheque_amount", precision = 12, scale = 2)
     private BigDecimal chequeAmount;
 
+    @Column(name = "surety_1", length = 20)
+    private String surety1;
+
+    @Column(name = "surety_2", length = 20)
+    private String surety2;
+
+    @Column(name = "surety_3", length = 20)
+    private String surety3;
+
     @Column(length = 250)
     private String remarks;
 

@@ -20,6 +20,11 @@ const emptyForm = {
   shareCapital: "",
   thriftDeposit: "",
   phoneNo: "",
+  nomineeName: "",
+  nomineeDob: "",
+  nomineeRelationship: "",
+  nomineeGender: "",
+  nomineeAddress: "",
 };
 
 function Members() {
@@ -78,6 +83,11 @@ function Members() {
       shareCapital: member.shareCapital || "",
       thriftDeposit: member.thriftDeposit || "",
       phoneNo: member.phoneNo || "",
+      nomineeName: member.nomineeName || "",
+      nomineeDob: member.nomineeDob || "",
+      nomineeRelationship: member.nomineeRelationship || "",
+      nomineeGender: member.nomineeGender || "",
+      nomineeAddress: member.nomineeAddress || "",
     });
     setEditingId(member.id);
     setShowForm(true);
@@ -258,6 +268,33 @@ function Members() {
                   Residential Address
                   <textarea name="residentialAddress" value={form.residentialAddress} onChange={handleChange} />
                 </label>
+
+                {/* Nominee Information */}
+                <h3 className="full-width" style={{ gridColumn: "span 2", marginTop: 20, borderBottom: "1px solid #e2e8f0", paddingBottom: 5, color: "#1e293b" }}>Nominee Beneficiary Information</h3>
+                <label>
+                  Nominee Name
+                  <input name="nomineeName" value={form.nomineeName} onChange={handleChange} />
+                </label>
+                <label>
+                  Nominee Date of Birth
+                  <input type="date" name="nomineeDob" value={form.nomineeDob} onChange={handleChange} />
+                </label>
+                <label>
+                  Nominee Relationship
+                  <input name="nomineeRelationship" value={form.nomineeRelationship} onChange={handleChange} />
+                </label>
+                <label>
+                  Nominee Gender
+                  <select name="nomineeGender" value={form.nomineeGender} onChange={handleChange} style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}>
+                    <option value="">Select Gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                  </select>
+                </label>
+                <label className="full-width" style={{ gridColumn: "span 2" }}>
+                  Nominee Address
+                  <textarea name="nomineeAddress" value={form.nomineeAddress} onChange={handleChange} />
+                </label>
               </div>
               <div className="form-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
@@ -291,6 +328,12 @@ function Members() {
               <div><strong>Share Capital Balance:</strong> ₹{selectedMember.shareCapital?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div><strong>Thrift Deposit Balance:</strong> ₹{selectedMember.thriftDeposit?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div style={{ gridColumn: "span 2" }}><strong>Residential Address:</strong> {selectedMember.residentialAddress || "N/A"}</div>
+              <h3 style={{ gridColumn: "span 2", marginTop: 15, borderBottom: "1px solid #cbd5e1", paddingBottom: 5, color: "#1e293b", fontSize: "1.05rem" }}>Nominee Beneficiary Details</h3>
+              <div><strong>Nominee Name:</strong> {selectedMember.nomineeName || "N/A"}</div>
+              <div><strong>Relationship:</strong> {selectedMember.nomineeRelationship || "N/A"}</div>
+              <div><strong>Nominee DOB:</strong> {selectedMember.nomineeDob || "N/A"}</div>
+              <div><strong>Nominee Gender:</strong> {selectedMember.nomineeGender || "N/A"}</div>
+              <div style={{ gridColumn: "span 2" }}><strong>Nominee Address:</strong> {selectedMember.nomineeAddress || "N/A"}</div>
             </div>
 
             <div className="form-actions">
