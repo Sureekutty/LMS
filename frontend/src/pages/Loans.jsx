@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { CreditCard, PlusCircle, RefreshCw, CheckCircle, XCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { CreditCard, PlusCircle, RefreshCw, CheckCircle, XCircle, ArrowRight, ArrowLeft, ShieldCheck, Eye } from "lucide-react";
 import API from "../api/axios";
 import "./Loans.css";
 
@@ -12,9 +13,11 @@ const emptyForm = {
 };
 
 export default function Loans() {
+  const navigate = useNavigate();
   const [loans, setLoans] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLoan, setSelectedLoan] = useState(null);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -148,6 +151,10 @@ export default function Loans() {
 
   return (
     <main className="loans-page">
+      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
       <header className="page-header">
         <div>
           <h1>Loans & Repayments Ledger</h1>
@@ -299,7 +306,10 @@ export default function Loans() {
                       </span>
                     </td>
                     <td>
-                      <div className="action-row">
+                      <div className="action-row" style={{ display: "flex", gap: 10 }}>
+                        <button className="close-btn" onClick={() => setSelectedLoan(l)} title="Inspect Loan Details" style={{ color: "#0ea5e9", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                          <Eye size={16} />
+                        </button>
                         {/* Approve/Reject (Admin/Accountant) */}
                         {l.status === "APPLIED" && (isAdmin || isAccountant) && (
                           <>
@@ -331,7 +341,33 @@ export default function Loans() {
             </table>
           </div>
         )}
-      </section>
+      {/* Selected Loan Details Modal */}
+      {selectedLoan && (
+        <div className="modal-overlay" onClick={() => setSelectedLoan(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Loan Account Inspector</h3>
+            <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, margin: "20px 0", textAlign: "left", fontSize: "0.95rem" }}>
+              <div><strong>Loan Number:</strong> {selectedLoan.loanNo}</div>
+              <div><strong>Member Profile:</strong> {selectedLoan.member?.name} ({selectedLoan.member?.membershipNo})</div>
+              <div><strong>Loan Scheme:</strong> {selectedLoan.loanType}</div>
+              <div><strong>Requested Principal:</strong> ₹{selectedLoan.amountRequested?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+              <div><strong>Sanctioned Principal:</strong> ₹{selectedLoan.amountSanctioned?.toLocaleString("en-IN", { minimumFractionDigits: 2 }) || "-"}</div>
+              <div><strong>Outstanding Principal Balance:</strong> ₹{selectedLoan.outstandingPrincipal?.toLocaleString("en-IN", { minimumFractionDigits: 2 }) || "0.00"}</div>
+              <div><strong>Outstanding Accrued Interest:</strong> ₹{selectedLoan.outstandingInterest?.toLocaleString("en-IN", { minimumFractionDigits: 2 }) || "0.00"}</div>
+              <div><strong>Monthly Installment (EMI):</strong> ₹{selectedLoan.monthlyInstallment?.toLocaleString("en-IN", { minimumFractionDigits: 2 }) || "-"}</div>
+              <div><strong>Interest Rate:</strong> {selectedLoan.interestRate || "0"}%</div>
+              <div><strong>Purpose:</strong> {selectedLoan.purpose || "N/A"}</div>
+              <div><strong>Application Date:</strong> {selectedLoan.appliedDate ? new Date(selectedLoan.appliedDate).toLocaleDateString("en-IN") : "N/A"}</div>
+              <div><strong>Sanction Date:</strong> {selectedLoan.sanctionedDate ? new Date(selectedLoan.sanctionedDate).toLocaleDateString("en-IN") : "N/A"}</div>
+              <div><strong>Disbursed By:</strong> {selectedLoan.disbursedBy || "N/A"}</div>
+              <div><strong>Status:</strong> <span className={`status-badge ${selectedLoan.status?.toLowerCase()}`}>{selectedLoan.status}</span></div>
+            </div>
+            <div className="modal-actions">
+              <button className="cancel-btn" onClick={() => setSelectedLoan(null)}>Close Inspector</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
