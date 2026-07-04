@@ -185,29 +185,39 @@ export default function Layout({ children }) {
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginLeft: '0.5rem' }}>
-              <button className="icon-btn" onClick={toggleTheme} style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
+              <button className="icon-btn" onClick={toggleTheme} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                 {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
               </button>
               
               <div style={{ position: 'relative' }}>
-                <button className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
+                <button className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                   <Bell size={20} />
-                  <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', background: '#ef4444', borderRadius: '50%', border: '2px solid white', color: 'white', fontSize: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+                  <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', background: '#ef4444', borderRadius: '50%', border: '2px solid var(--bg-card)', color: 'white', fontSize: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
                 </button>
                 
                 {isNotificationsOpen && (
-                  <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)', width: '280px', zIndex: 100, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '0.5rem', background: 'var(--bg-card)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)', width: '320px', zIndex: 100, overflow: 'hidden' }}>
                     <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ color: 'var(--text-primary)' }}>Notifications</strong>
                       <span style={{ fontSize: '0.75rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}>Mark all read</span>
                     </div>
                     <div style={{ padding: '0', maxHeight: '300px', overflowY: 'auto' }}>
-                      {[1, 2, 3].map(i => (
-                        <div key={i} style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '1rem', cursor: 'pointer' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', marginTop: '6px' }}></div>
+                      {[
+                        { id: 1, title: 'New Loan Application', desc: 'Rajesh applied for a personal loan.', link: '/loans' },
+                        { id: 2, title: 'Share Transfer Request', desc: 'John Doe requested a transfer of 50 shares.', link: '/shares' },
+                        { id: 3, title: 'System Alert', desc: 'Monthly audit reports generated successfully.', link: '/reports' }
+                      ].map(n => (
+                        <div 
+                          key={n.id} 
+                          onClick={() => { navigate(n.link); setIsNotificationsOpen(false); }}
+                          style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
+                          onMouseOver={(e) => e.currentTarget.style.background = 'var(--border-light)'}
+                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', marginTop: '6px', flexShrink: 0 }}></div>
                           <div>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>New Share Transfer</p>
-                            <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>John Doe requested a transfer of 50 shares.</p>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>{n.title}</p>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{n.desc}</p>
                           </div>
                         </div>
                       ))}
@@ -217,7 +227,7 @@ export default function Layout({ children }) {
               </div>
               
               <div style={{ position: 'relative' }}>
-                <div onClick={() => setIsProfileOpen(!isProfileOpen)} title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '0.5rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '50px', transition: 'all 0.2s', background: isProfileOpen ? '#f1f5f9' : 'transparent' }}>
+                <div onClick={() => setIsProfileOpen(!isProfileOpen)} title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '0.5rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '50px', transition: 'all 0.2s', background: isProfileOpen ? 'var(--border-light)' : 'transparent' }}>
                   <div style={{ 
                     width: '42px', height: '42px', borderRadius: '50%', 
                     backgroundColor: 'var(--primary)', color: 'white', 
@@ -237,7 +247,7 @@ export default function Layout({ children }) {
                 </div>
 
                 {isProfileOpen && (
-                  <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)', width: '220px', zIndex: 100, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '0.5rem', background: 'var(--bg-card)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)', width: '220px', zIndex: 100, overflow: 'hidden' }}>
                     <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
                       <strong style={{ display: 'block', color: 'var(--text-primary)' }}>{username}</strong>
                       <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Manage your account</span>
