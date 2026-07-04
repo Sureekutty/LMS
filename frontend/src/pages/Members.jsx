@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye } from "lucide-react";
+import { Eye, Plus, Search, X, Download, FileSpreadsheet, ChevronRight, User, RefreshCw } from "lucide-react";
 import API from "../api/axios";
 import "./Members.css";
 
@@ -32,10 +32,11 @@ function Members() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const roles = JSON.parse(localStorage.getItem("roles") || "[]");
+  const isAdminOrClerk = roles.some(r => ["ROLE_ADMIN", "ROLE_CLERK"].includes(r));
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -51,72 +52,15 @@ function Members() {
   };
 
   useEffect(() => {
-    const roles = JSON.parse(localStorage.getItem("roles") || "[]");
-    const isAuthorized = roles.some(r => ["ROLE_ADMIN", "ROLE_CLERK"].includes(r));
-    if (!isAuthorized) {
-      navigate("/dashboard");
-      return;
-    }
     fetchMembers();
-  }, []);
+  }, [navigate]);
 
   const openAddForm = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-    setShowForm(true);
+    navigate("/members/new");
   };
 
   const openEditForm = (member) => {
-    setForm({
-      membershipNo: member.membershipNo || "",
-      name: member.name || "",
-      designation: member.designation || "",
-      fatherHusbandName: member.fatherHusbandName || "",
-      staffCode: member.staffCode || "",
-      sectionDivision: member.sectionDivision || "",
-      age: member.age || "",
-      dateOfBirth: member.dateOfBirth || "",
-      dateOfJoining: member.dateOfJoining || "",
-      bankAccountNo: member.bankAccountNo || "",
-      residentialAddress: member.residentialAddress || "",
-      basicPay: member.basicPay || "",
-      shareCapital: member.shareCapital || "",
-      thriftDeposit: member.thriftDeposit || "",
-      phoneNo: member.phoneNo || "",
-      nomineeName: member.nomineeName || "",
-      nomineeDob: member.nomineeDob || "",
-      nomineeRelationship: member.nomineeRelationship || "",
-      nomineeGender: member.nomineeGender || "",
-      nomineeAddress: member.nomineeAddress || "",
-    });
-    setEditingId(member.id);
-    setShowForm(true);
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = {
-      ...form,
-      age: form.age ? parseInt(form.age, 10) : null,
-      basicPay: form.basicPay ? parseFloat(form.basicPay) : null,
-      shareCapital: form.shareCapital ? parseFloat(form.shareCapital) : 0,
-      thriftDeposit: form.thriftDeposit ? parseFloat(form.thriftDeposit) : 0,
-    };
-    try {
-      if (editingId) {
-        await API.put(`/members/${editingId}`, payload);
-      } else {
-        await API.post("/members", payload);
-      }
-      setShowForm(false);
-      fetchMembers();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to save member.");
-    }
+    navigate(`/members/${member.id}/edit`);
   };
 
   const downloadPdf = async (id, membershipNo) => {
@@ -146,223 +90,213 @@ function Members() {
     }
   };
 
-  return (
-    <div className="members-page">
-      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
-        <ArrowLeft size={16} /> Back to Dashboard
-      </button>
+  const filteredMembers = useMemo(() => {
+    return members.filter(m => 
+      m.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      m.membershipNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.designation?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [members, searchQuery]);
 
-      <div className="members-header">
-        <h1>Members</h1>
-        <button className="btn-primary" onClick={openAddForm}>
-          + Add Member
-        </button>
+  return (
+    <div className="page-container animate__animated animate__fadeIn members-container">
+      <div className="page-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-title-group">
+          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            User Management
+          </span>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>Member Directory</h1>
+        </div>
+        {isAdminOrClerk && (
+          <button className="btn-enterprise btn-primary" onClick={openAddForm}>
+            <Plus size={18} /> Enroll New Member
+          </button>
+        )}
+      </div>
+
+      <div className="members-header-actions">
+        <div className="search-bar-wrapper">
+          <Search size={18} color="#94a3b8" />
+          <input 
+            type="text" 
+            placeholder="Search by name, ID, or staff code..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="table-header-group">
+          <button className="btn-enterprise btn-secondary" onClick={() => alert("Exporting to Excel...")}>
+            <FileSpreadsheet size={16} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {error && <div className="members-error">{error}</div>}
 
-      {loading ? (
-        <p>Loading members...</p>
-      ) : (
-        <div className="members-table-wrap">
-          <table className="members-table">
-            <thead>
-              <tr>
-                <th>Membership No</th>
-                <th>Name</th>
-                <th>Designation</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.length === 0 ? (
+      <div className="dashboard-card" style={{ padding: '0', overflow: 'hidden' }}>
+        {loading ? (
+          <div className="empty-state">
+            <div className="spin-icon"><RefreshCw size={32} color="var(--primary)" /></div>
+            <p style={{ marginTop: '1rem', color: '#64748b' }}>Loading member directory...</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="enterprise-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" className="empty-row">
-                    No members found.
-                  </td>
+                  <th>Member Name</th>
+                  <th>Membership No</th>
+                  <th>Designation</th>
+                  <th>Staff Code</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                members.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.membershipNo}</td>
-                    <td>{m.name}</td>
-                    <td>{m.designation}</td>
-                    <td>{m.phoneNo}</td>
-                    <td>
-                      <span className={m.isActive ? "badge-active" : "badge-inactive"}>
-                        {m.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn-link view-btn" onClick={() => setSelectedMember(m)} style={{ marginRight: 10, display: "inline-flex", alignItems: "center" }}>
-                        <Eye size={14} style={{ marginRight: 4 }} /> View
-                      </button>
-                      <button className="btn-link" onClick={() => openEditForm(m)}>
-                        Edit
-                      </button>
-                      {m.isActive && (
-                        <button
-                          className="btn-link danger"
-                          onClick={() => handleDeactivate(m.id)}
-                        >
-                          Deactivate
-                        </button>
-                      )}
+              </thead>
+              <tbody>
+                {filteredMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="empty-state">
+                      No members found matching your search.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingId ? "Edit Member" : "Add Member"}</h2>
-            <form onSubmit={handleSubmit} className="member-form">
-              <div className="form-grid">
-                <label>
-                  Membership No *
-                  <input name="membershipNo" value={form.membershipNo} onChange={handleChange} required />
-                </label>
-                <label>
-                  Name *
-                  <input name="name" value={form.name} onChange={handleChange} required />
-                </label>
-                <label>
-                  Designation
-                  <input name="designation" value={form.designation} onChange={handleChange} />
-                </label>
-                <label>
-                  Father/Husband Name
-                  <input name="fatherHusbandName" value={form.fatherHusbandName} onChange={handleChange} />
-                </label>
-                <label>
-                  Staff Code
-                  <input name="staffCode" value={form.staffCode} onChange={handleChange} />
-                </label>
-                <label>
-                  Section/Division
-                  <input name="sectionDivision" value={form.sectionDivision} onChange={handleChange} />
-                </label>
-                <label>
-                  Age
-                  <input type="number" name="age" value={form.age} onChange={handleChange} />
-                </label>
-                <label>
-                  Date of Birth
-                  <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} />
-                </label>
-                <label>
-                  Date of Joining
-                  <input type="date" name="dateOfJoining" value={form.dateOfJoining} onChange={handleChange} />
-                </label>
-                <label>
-                  Bank Account No
-                  <input name="bankAccountNo" value={form.bankAccountNo} onChange={handleChange} />
-                </label>
-                <label>
-                  Basic Pay
-                  <input type="number" step="0.01" name="basicPay" value={form.basicPay} onChange={handleChange} />
-                </label>
-                <label>
-                  Share Capital
-                  <input type="number" step="0.01" name="shareCapital" value={form.shareCapital} onChange={handleChange} />
-                </label>
-                <label>
-                  Thrift Deposit
-                  <input type="number" step="0.01" name="thriftDeposit" value={form.thriftDeposit} onChange={handleChange} />
-                </label>
-                <label>
-                  Phone No
-                  <input name="phoneNo" value={form.phoneNo} onChange={handleChange} />
-                </label>
-                <label className="full-width">
-                  Residential Address
-                  <textarea name="residentialAddress" value={form.residentialAddress} onChange={handleChange} />
-                </label>
-
-                {/* Nominee Information */}
-                <h3 className="full-width" style={{ gridColumn: "span 2", marginTop: 20, borderBottom: "1px solid #e2e8f0", paddingBottom: 5, color: "#1e293b" }}>Nominee Beneficiary Information</h3>
-                <label>
-                  Nominee Name
-                  <input name="nomineeName" value={form.nomineeName} onChange={handleChange} />
-                </label>
-                <label>
-                  Nominee Date of Birth
-                  <input type="date" name="nomineeDob" value={form.nomineeDob} onChange={handleChange} />
-                </label>
-                <label>
-                  Nominee Relationship
-                  <input name="nomineeRelationship" value={form.nomineeRelationship} onChange={handleChange} />
-                </label>
-                <label>
-                  Nominee Gender
-                  <select name="nomineeGender" value={form.nomineeGender} onChange={handleChange} style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}>
-                    <option value="">Select Gender</option>
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                  </select>
-                </label>
-                <label className="full-width" style={{ gridColumn: "span 2" }}>
-                  Nominee Address
-                  <textarea name="nomineeAddress" value={form.nomineeAddress} onChange={handleChange} />
-                </label>
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editingId ? "Update" : "Save"}
-                </button>
-              </div>
-            </form>
+                ) : (
+                  filteredMembers.map((m) => (
+                    <tr key={m.id} className="interactive-row">
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}>
+                            {m.name ? m.name.charAt(0).toUpperCase() : 'M'}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span>{m.name}</span>
+                            {(m.staffCode || m.designation?.toLowerCase().includes("staff") || m.designation?.toLowerCase().includes("admin")) && (
+                              <span style={{ fontSize: '0.7rem', background: '#fef08a', color: '#854d0e', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '2px', fontWeight: 700 }}>
+                                STAFF
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>{m.membershipNo}</td>
+                      <td>{m.designation || '-'}</td>
+                      <td>{m.staffCode || '-'}</td>
+                      <td>{m.phoneNo || '-'}</td>
+                      <td>
+                        <span className={`badge ${m.isActive ? "badge-success" : "badge-danger"}`}>
+                          {m.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button className="action-icon-btn btn-view" title="View Profile" onClick={() => setSelectedMember(m)}>
+                            <Eye size={18} />
+                          </button>
+                          {isAdminOrClerk && (
+                            <button className="action-icon-btn btn-edit" title="Edit Member" onClick={() => openEditForm(m)}>
+                              <ChevronRight size={18} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+            
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>
+              <span>Showing {filteredMembers.length} members</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Member Profile Slide-out Panel */}
       {selectedMember && (
-        <div className="modal-overlay" onClick={() => setSelectedMember(null)}>
-          <div className="modal-box details-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
-            <h2>Member Ledger Inspector</h2>
-            <p className="subtitle">Inspecting details for: <strong>{selectedMember.name}</strong></p>
+        <>
+          <div className="slide-panel-overlay" onClick={() => setSelectedMember(null)}></div>
+          <div className="slide-panel">
+            <button className="slide-panel-close" onClick={() => setSelectedMember(null)}>
+              <X size={20} />
+            </button>
+            
+            <div className="profile-avatar">
+              {selectedMember.name.charAt(0).toUpperCase()}
+            </div>
+            
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              {selectedMember.name}
+            </h2>
+            <p style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              {selectedMember.designation || 'Member'} • #{selectedMember.membershipNo}
+            </p>
 
-            <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, margin: "20px 0", textAlign: "left" }}>
-              <div><strong>Membership No:</strong> {selectedMember.membershipNo}</div>
-              <div><strong>Staff Code:</strong> {selectedMember.staffCode || "N/A"}</div>
-              <div><strong>Designation:</strong> {selectedMember.designation || "N/A"}</div>
-              <div><strong>Father/Husband Name:</strong> {selectedMember.fatherHusbandName || "N/A"}</div>
-              <div><strong>Section / Division:</strong> {selectedMember.sectionDivision || "N/A"}</div>
-              <div><strong>Phone No:</strong> {selectedMember.phoneNo || "N/A"}</div>
-              <div><strong>Age:</strong> {selectedMember.age || "N/A"}</div>
-              <div><strong>Date of Birth:</strong> {selectedMember.dateOfBirth || "N/A"}</div>
-              <div><strong>Date of Joining:</strong> {selectedMember.dateOfJoining || "N/A"}</div>
-              <div><strong>Bank Account No:</strong> {selectedMember.bankAccountNo || "N/A"}</div>
-              <div><strong>Share Capital Balance:</strong> ₹{selectedMember.shareCapital?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div><strong>Thrift Deposit Balance:</strong> ₹{selectedMember.thriftDeposit?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ gridColumn: "span 2" }}><strong>Residential Address:</strong> {selectedMember.residentialAddress || "N/A"}</div>
-              <h3 style={{ gridColumn: "span 2", marginTop: 15, borderBottom: "1px solid #cbd5e1", paddingBottom: 5, color: "#1e293b", fontSize: "1.05rem" }}>Nominee Beneficiary Details</h3>
-              <div><strong>Nominee Name:</strong> {selectedMember.nomineeName || "N/A"}</div>
-              <div><strong>Relationship:</strong> {selectedMember.nomineeRelationship || "N/A"}</div>
-              <div><strong>Nominee DOB:</strong> {selectedMember.nomineeDob || "N/A"}</div>
-              <div><strong>Nominee Gender:</strong> {selectedMember.nomineeGender || "N/A"}</div>
-              <div style={{ gridColumn: "span 2" }}><strong>Nominee Address:</strong> {selectedMember.nomineeAddress || "N/A"}</div>
+            <div className="profile-stat-grid">
+              <div className="profile-stat-box">
+                <span>Share Capital</span>
+                <strong>₹{selectedMember.shareCapital?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}</strong>
+              </div>
+              <div className="profile-stat-box">
+                <span>Thrift Deposit</span>
+                <strong>₹{selectedMember.thriftDeposit?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}</strong>
+              </div>
             </div>
 
-            <div className="form-actions" style={{ display: "flex", gap: 15, justifyContent: "flex-end" }}>
-              <button type="button" className="btn-primary" onClick={() => downloadPdf(selectedMember.id, selectedMember.membershipNo)}>
-                Dispatch Statement (PDF)
+            <div className="profile-section-title">Personal Information</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem', color: '#475569' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Staff Code</strong>
+                <span>{selectedMember.staffCode || "N/A"}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Father/Husband</strong>
+                <span>{selectedMember.fatherHusbandName || "N/A"}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Phone Number</strong>
+                <span>{selectedMember.phoneNo || "N/A"}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Date of Birth</strong>
+                <span>{selectedMember.dateOfBirth || "N/A"}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Bank Account</strong>
+                <span>{selectedMember.bankAccountNo || "N/A"}</span>
+              </div>
+            </div>
+
+            <div className="profile-section-title">Nominee Details</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem', color: '#475569' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Name</strong>
+                <span>{selectedMember.nomineeName || "N/A"}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ color: '#0f172a' }}>Relationship</strong>
+                <span>{selectedMember.nomineeRelationship || "N/A"}</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '3rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <button className="btn-enterprise btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => downloadPdf(selectedMember.id, selectedMember.membershipNo)}>
+                <Download size={16} /> Download Full Statement
               </button>
-              <button type="button" className="btn-secondary" onClick={() => setSelectedMember(null)}>
-                Close Inspector
-              </button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button className="btn-enterprise btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { setSelectedMember(null); openEditForm(selectedMember); }}>
+                  Edit Profile
+                </button>
+                {selectedMember.isActive && (
+                  <button className="btn-enterprise btn-danger" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { handleDeactivate(selectedMember.id); setSelectedMember(null); }}>
+                    Deactivate
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

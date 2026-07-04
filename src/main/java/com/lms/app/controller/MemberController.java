@@ -23,13 +23,13 @@ public class MemberController {
     private UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<List<Member>> getAllMembers() {
         return ResponseEntity.ok(memberService.getAllMembers());
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<List<Member>> getActiveMembers() {
         return ResponseEntity.ok(memberService.getAllActiveMembers());
     }

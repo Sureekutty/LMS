@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, ArrowRight, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye } from "lucide-react";
+import { Landmark, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye } from "lucide-react";
 import API from "../api/axios";
 import "./Deposits.css";
 
@@ -91,7 +91,7 @@ export default function Deposits() {
       setCalcMaturity(Math.round(amount));
     } else {
       // Recurring Deposit bracket compounding logic
-      let m1 = 0, m2 = 0, m3 = 0, m4 = 0, m5 = 0, maturity = 0;
+      let m1 = 0, m2 = 0, m3 = 0, m4 = 0, maturity = 0;
       if (dur <= 12) {
         m1 = (p * r * (dur * (dur + 1))) / 2400.0;
         maturity = m1 + (dur * p);
@@ -126,20 +126,77 @@ export default function Deposits() {
     setError("");
 
     try {
-      const payload = {
-        member: { id: form.memberId },
-        depositType: { id: form.depositTypeId },
-        principalAmount: parseFloat(form.principalAmount),
-        durationMonths: parseInt(form.durationMonths),
+      // 1. Load Razorpay Script
+      const res = await import("../utils/razorpay").then(m => m.loadRazorpayScript());
+      if (!res) {
+        setError("Razorpay SDK failed to load. Check connection.");
+        setFormLoading(false);
+        return;
+      }
+
+      const principal = parseFloat(form.principalAmount);
+
+      // 2. Create Order on Backend
+      const orderRes = await API.post("/payments/create-order", {
+        amount: principal,
+        referenceType: "DEPOSIT",
+        referenceId: form.memberId
+      });
+
+      const { orderId, amount, currency } = orderRes.data;
+
+      // 3. Configure Razorpay Options
+      const options = {
+        key: "rzp_test_YourTestKeyIdHere", // MUST MATCH BACKEND!
+        amount: amount.toString(),
+        currency: currency,
+        name: "LMS Enterprise",
+        description: "Open New Deposit",
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            // 4. Verify Payment on Backend
+            await API.post("/payments/verify", {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+
+            // 5. Create Deposit after successful payment
+            const payload = {
+              member: { id: form.memberId },
+              depositType: { id: form.depositTypeId },
+              principalAmount: principal,
+              durationMonths: parseInt(form.durationMonths),
+            };
+      
+            await API.post("/deposits", payload);
+            setFormSuccess("Payment successful & Deposit account opened!");
+            setForm(emptyForm);
+            setShowForm(false);
+            fetchInitialData();
+          } catch (err) {
+            setError("Payment verification failed on server.");
+          }
+        },
+        prefill: {
+          name: "Member Name",
+          email: "member@example.com",
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#4318ff"
+        }
       };
 
-      await API.post("/deposits", payload);
-      setFormSuccess("Deposit account opened successfully!");
-      setForm(emptyForm);
-      setShowForm(false);
-      fetchInitialData();
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        setError("Payment Failed: " + response.error.description);
+      });
+      rzp1.open();
+      
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to open deposit account.");
+      setError(err.response?.data?.error || "Failed to initiate payment.");
     } finally {
       setFormLoading(false);
     }
@@ -197,71 +254,71 @@ export default function Deposits() {
   };
 
   return (
-    <main className="deposits-page">
-      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
       <header className="page-header">
-        <div>
-          <h1>Deposits & Savings</h1>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Deposits & Savings</h1>
           <p>Configure, open, and review interest accruals on savings accounts</p>
         </div>
         {(isAdmin || isClerk) && (
-          <button className="open-form-btn" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} />
-            Open Deposit Account
+          <button className="btn-enterprise btn-primary" onClick={() => setShowForm(!showForm)}>
+            <PlusCircle size={18} /> Open Deposit Account
           </button>
         )}
       </header>
 
       {/* Dynamic Compounding Calculator */}
-      <section className="calculator-section">
-        <h3>Dynamic Deposit Compounding Calculator</h3>
-        <div className="calculator-grid">
-          <label>
-            <span>Principal Amount (₹)</span>
-            <input type="number" value={calcPrincipal} onChange={(e) => setCalcPrincipal(e.target.value)} />
+      <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Dynamic Deposit Compounding Calculator</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Principal Amount (₹)</span>
+            <input className="enterprise-input" type="number" value={calcPrincipal} onChange={(e) => setCalcPrincipal(e.target.value)} />
           </label>
-          <label>
-            <span>Interest Rate (%)</span>
-            <input type="number" step="0.1" value={calcRate} onChange={(e) => setCalcRate(e.target.value)} />
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Interest Rate (%)</span>
+            <input className="enterprise-input" type="number" step="0.1" value={calcRate} onChange={(e) => setCalcRate(e.target.value)} />
           </label>
-          <label>
-            <span>Tenure (Months)</span>
-            <input type="number" value={calcDuration} onChange={(e) => setCalcDuration(e.target.value)} />
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Tenure (Months)</span>
+            <input className="enterprise-input" type="number" value={calcDuration} onChange={(e) => setCalcDuration(e.target.value)} />
           </label>
-          <label>
-            <span>Deposit Type</span>
-            <select value={calcType} onChange={(e) => setCalcType(e.target.value)}>
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Deposit Type</span>
+            <select className="enterprise-select" value={calcType} onChange={(e) => setCalcType(e.target.value)}>
               <option value="FD">Fixed Deposit (Quarterly Compound)</option>
               <option value="RD">Recurring Deposit (Bracket Compound)</option>
             </select>
           </label>
-          <div className="calc-result">
-            <h4>Estimated Maturity Value</h4>
-            <div className="maturity-val">₹{calcMaturity.toLocaleString("en-IN")}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', backgroundColor: 'var(--primary)', color: 'white', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estimated Maturity</h4>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>₹{calcMaturity.toLocaleString("en-IN")}</div>
           </div>
         </div>
       </section>
 
       {/* Thrift Uploading console for Admin and Clerks */}
       {(isAdmin || isClerk) && (
-        <section className="calculator-section" style={{ marginTop: 25 }}>
-          <h3>Bulk Thrift Uploading Dispatcher</h3>
-          <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: 12 }}>
+        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Bulk Thrift Uploading Dispatcher</h3>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: '1.5rem' }}>
             Input bulk subscription updates. Paste CSV rows in format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
           </p>
           <form onSubmit={handleBulkThriftUpload}>
             <textarea
+              className="enterprise-input"
               placeholder="SC101,150.00&#10;MEM001,200.00"
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
-              style={{ width: "100%", height: 110, padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, fontFamily: "monospace", fontSize: "0.95rem" }}
+              style={{ width: "100%", height: 110, fontFamily: "monospace", resize: 'vertical' }}
               required
             />
-            <div style={{ marginTop: 10, textAlign: "right" }}>
-              <button type="submit" disabled={bulkLoading} className="open-form-btn" style={{ padding: "10px 20px" }}>
+            <div style={{ marginTop: '1rem', textAlign: "right" }}>
+              <button type="submit" disabled={bulkLoading} className="btn-enterprise btn-primary">
                 {bulkLoading ? "Posting Subscriptions..." : "Post Bulk Subscriptions"}
               </button>
             </div>
@@ -271,14 +328,14 @@ export default function Deposits() {
 
       {/* Open Deposit Account Form */}
       {showForm && (
-        <section className="deposit-form-wrapper">
-          <form onSubmit={handleOpenDeposit} className="deposit-form">
-            <h3>Open Deposit Account</h3>
+        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+          <form onSubmit={handleOpenDeposit}>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Open Deposit Account</h3>
             
-            <div className="form-row">
-              <label>
-                <span>Select Member</span>
-                <select value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <label className="enterprise-form-group">
+                <span className="enterprise-label">Select Member</span>
+                <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
                   <option value="">-- Choose Member --</option>
                   {members.map(m => (
                     <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
@@ -286,9 +343,9 @@ export default function Deposits() {
                 </select>
               </label>
               
-              <label>
-                <span>Deposit Type</span>
-                <select value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
+              <label className="enterprise-form-group">
+                <span className="enterprise-label">Deposit Type</span>
+                <select className="enterprise-select" value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
                   <option value="">-- Choose Type --</option>
                   {depositTypes.map(t => (
                     <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
@@ -302,49 +359,47 @@ export default function Deposits() {
                   )}
                 </select>
               </label>
-            </div>
 
-            <div className="form-row">
-              <label>
-                <span>Deposit Amount (₹)</span>
-                <input type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
+              <label className="enterprise-form-group">
+                <span className="enterprise-label">Deposit Amount (₹)</span>
+                <input className="enterprise-input" type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
               </label>
 
-              <label>
-                <span>Tenure (Months)</span>
-                <input type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
+              <label className="enterprise-form-group">
+                <span className="enterprise-label">Tenure (Months)</span>
+                <input className="enterprise-input" type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
               </label>
             </div>
 
-            {formSuccess && <div className="form-success-msg">{formSuccess}</div>}
-            {error && <div className="form-error-msg">{error}</div>}
+            {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
+            {error && <div className="alert alert-danger mt-4">{error}</div>}
 
-            <div className="form-actions">
-              <button type="submit" disabled={formLoading} className="submit-btn">
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
+              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
                 {formLoading ? "Opening..." : "Open Account"}
               </button>
-              <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
             </div>
           </form>
         </section>
       )}
 
       {/* Active Deposit list */}
-      <section className="deposits-list">
-        <h2>Active Deposit Accounts</h2>
+      <section>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Active Deposit Accounts</h2>
         {loading ? (
-          <div className="loading-state">
+          <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />
-            <p>Fetching ledger records...</p>
+            <p style={{ marginTop: '1rem' }}>Fetching ledger records...</p>
           </div>
         ) : deposits.length === 0 ? (
           <div className="empty-state">
             <Wallet size={36} />
-            <p>No active deposit records found.</p>
+            <p style={{ marginTop: '1rem' }}>No active deposit records found.</p>
           </div>
         ) : (
-          <div className="table-wrap">
-            <table className="deposits-table">
+          <div className="table-wrapper">
+            <table className="enterprise-table">
               <thead>
                 <tr>
                   <th>Account No</th>
@@ -361,7 +416,7 @@ export default function Deposits() {
               <tbody>
                 {deposits.map(d => (
                   <tr key={d.id}>
-                    <td>{d.depositNo}</td>
+                    <td><strong>{d.depositNo}</strong></td>
                     <td>{d.member?.name || "N/A"}</td>
                     <td>{d.depositType?.typeName || "FD/RD Account"}</td>
                     <td>₹{d.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
@@ -369,18 +424,21 @@ export default function Deposits() {
                     <td>{new Date(d.maturityDate).toLocaleDateString("en-IN")}</td>
                     <td>₹{d.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                     <td>
-                      <span className={`status-badge ${d.status?.toLowerCase()}`}>
+                      <span className={`badge badge-${
+                        d.status === 'ACTIVE' ? 'success' :
+                        d.status === 'CLOSED' ? 'secondary' : 'warning'
+                      }`}>
                         {d.status}
                       </span>
                     </td>
                     <td>
-                      <div className="action-row" style={{ display: "flex", gap: 10 }}>
-                        <button className="close-btn" onClick={() => setSelectedDeposit(d)} title="Inspect Account Details" style={{ color: "#0ea5e9" }}>
-                          <Eye size={16} />
+                      <div style={{ display: "flex", gap: "8px", alignItems: 'center' }}>
+                        <button className="btn-enterprise btn-secondary" onClick={() => setSelectedDeposit(d)} title="Inspect Account Details" style={{ padding: '0.4rem 0.6rem' }}>
+                          <Eye size={14} /> View
                         </button>
                         {d.status === "ACTIVE" && (isAdmin || isClerk) && (
-                          <button className="close-btn" onClick={() => handleCloseDeposit(d.id)} title="Liquidate Account">
-                            <XCircle size={16} />
+                          <button className="btn-enterprise btn-danger" onClick={() => handleCloseDeposit(d.id)} title="Liquidate Account" style={{ padding: '0.4rem 0.6rem' }}>
+                            <XCircle size={14} /> Close
                           </button>
                         )}
                       </div>
@@ -396,8 +454,8 @@ export default function Deposits() {
       {/* Selected Deposit Detailed Modal */}
       {selectedDeposit && (
         <div className="modal-overlay" onClick={() => setSelectedDeposit(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Deposit Account Inspector</h3>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>Deposit Account Inspector</h3>
             <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, margin: "20px 0", textAlign: "left", fontSize: "0.95rem" }}>
               <div><strong>Account No:</strong> {selectedDeposit.depositNo}</div>
               <div><strong>Member:</strong> {selectedDeposit.member?.name} ({selectedDeposit.member?.membershipNo})</div>
@@ -408,10 +466,15 @@ export default function Deposits() {
               <div><strong>Open Date:</strong> {new Date(selectedDeposit.openDate).toLocaleDateString("en-IN")}</div>
               <div><strong>Maturity Date:</strong> {new Date(selectedDeposit.maturityDate).toLocaleDateString("en-IN")}</div>
               <div><strong>Tenure:</strong> {selectedDeposit.durationMonths} Months</div>
-              <div><strong>Account Status:</strong> <span className={`status-badge ${selectedDeposit.status?.toLowerCase()}`}>{selectedDeposit.status}</span></div>
+              <div><strong>Account Status:</strong> 
+                <span className={`badge badge-${
+                        selectedDeposit.status === 'ACTIVE' ? 'success' :
+                        selectedDeposit.status === 'CLOSED' ? 'secondary' : 'warning'
+                      }`} style={{ marginLeft: 8 }}>{selectedDeposit.status}</span>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setSelectedDeposit(null)}>Close Inspector</button>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button className="btn-enterprise btn-secondary" onClick={() => setSelectedDeposit(null)}>Close Inspector</button>
             </div>
           </div>
         </div>

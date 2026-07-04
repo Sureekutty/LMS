@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { ShieldAlert, RefreshCw, User, Search, Calendar } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ShieldAlert, RefreshCw, User, Search, Calendar, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
 import "./Audits.css";
 
 export default function Audits() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,65 +59,76 @@ export default function Audits() {
   });
 
   return (
-    <main className="audits-page">
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
       <header className="page-header">
-        <div>
-          <h1>Security Audit Logs</h1>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Security Audit Logs</h1>
           <p>Trace operational events, administrative logins, and data modifications</p>
         </div>
-        <button className="open-form-btn" onClick={fetchLogs}>
+        <button className="btn-enterprise btn-primary" onClick={fetchLogs}>
           <RefreshCw size={18} />
           Refresh Trails
         </button>
       </header>
 
       {/* Filter Toolbar */}
-      <section className="filter-toolbar">
-        <form onSubmit={handleFilterSearch} className="filter-form">
-          <label className="filter-input-group">
-            <User size={18} />
+      <section className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <form onSubmit={handleFilterSearch} style={{ display: 'flex', gap: '1rem', flex: '1 1 auto', alignItems: 'center' }}>
+          <div className="enterprise-form-group" style={{ flex: 1, margin: 0, position: 'relative' }}>
+            <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>
+              <User size={18} />
+            </div>
             <input 
+              className="enterprise-input"
               type="text" 
               placeholder="Filter by Username..." 
               value={searchUser} 
               onChange={(e) => setSearchUser(e.target.value)} 
+              style={{ paddingLeft: '2.75rem', margin: 0 }}
             />
-          </label>
-          <button type="submit" className="filter-submit-btn">Filter User</button>
+          </div>
+          <button type="submit" className="btn-enterprise btn-secondary" style={{ margin: 0 }}>Filter User</button>
         </form>
 
-        <div className="filter-input-group keyword-search">
-          <Search size={18} />
+        <div className="enterprise-form-group" style={{ flex: '2 1 auto', margin: 0, position: 'relative' }}>
+          <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>
+            <Search size={18} />
+          </div>
           <input 
+            className="enterprise-input"
             type="text" 
             placeholder="Search descriptions / actions / IPs..." 
             value={searchKeyword} 
-            onChange={(e) => setSearchKeyword(e.target.value)} 
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{ paddingLeft: '2.75rem', margin: 0 }}
           />
         </div>
       </section>
 
       {/* Logs Table */}
-      <section className="deposits-list">
-        <h2>Auditing Trail Logs</h2>
+      <section>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Auditing Trail Logs</h2>
         {error ? (
-          <div className="empty-state error-box">
+          <div className="empty-state" style={{ color: 'var(--danger)', borderColor: '#fecaca', backgroundColor: '#fef2f2' }}>
             <ShieldAlert size={36} />
-            <p>{error}</p>
+            <p style={{ marginTop: '1rem' }}>{error}</p>
           </div>
         ) : loading ? (
-          <div className="loading-state">
+          <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />
-            <p>Scanning audit records...</p>
+            <p style={{ marginTop: '1rem' }}>Scanning audit records...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="empty-state">
             <ShieldAlert size={36} />
-            <p>No audit trail logs match your query.</p>
+            <p style={{ marginTop: '1rem' }}>No audit trail logs match your query.</p>
           </div>
         ) : (
-          <div className="table-wrap">
-            <table className="deposits-table">
+          <div className="table-wrapper">
+            <table className="enterprise-table">
               <thead>
                 <tr>
                   <th>Log ID</th>
@@ -129,16 +142,20 @@ export default function Audits() {
               <tbody>
                 {filteredLogs.map(l => (
                   <tr key={l.id}>
-                    <td>#{l.id}</td>
+                    <td><strong>#{l.id}</strong></td>
                     <td>{new Date(l.timestamp).toLocaleString("en-IN")}</td>
                     <td style={{ fontWeight: 700 }}>{l.username || "System"}</td>
                     <td>
-                      <span className={`event-badge ${l.action?.toLowerCase()}`}>
+                      <span className={`badge badge-${
+                        l.action?.toLowerCase().includes('create') || l.action?.toLowerCase().includes('add') ? 'success' :
+                        l.action?.toLowerCase().includes('delete') || l.action?.toLowerCase().includes('remove') ? 'danger' :
+                        l.action?.toLowerCase().includes('update') || l.action?.toLowerCase().includes('edit') ? 'warning' : 'primary'
+                      }`}>
                         {l.action}
                       </span>
                     </td>
                     <td>{l.description}</td>
-                    <td><code>{l.ipAddress || "N/A"}</code></td>
+                    <td><code style={{ background: '#f1f5f9', padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' }}>{l.ipAddress || "N/A"}</code></td>
                   </tr>
                 ))}
               </tbody>

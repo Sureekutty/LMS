@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { Landmark, FileText, Download, Users, Landmark as BankIcon, CreditCard, RefreshCw } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Landmark, FileText, Download, Users, Landmark as BankIcon, CreditCard, RefreshCw, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
 import "./Reports.css";
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalMembers: 0,
     totalShareCapital: 0,
@@ -80,109 +82,143 @@ export default function Reports() {
   const handleDownloadCsv = (type) => {
     const token = localStorage.getItem("token");
     const url = `${API.defaults.baseURL}/reports/${type}/csv`;
-    
-    // Create temporary download anchor to support authorization headers or download directly via browser
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${type}_report.csv`;
-    
-    // Fall back to opening window with token attached in URL query or standard link
+    window.open(`${url}?token=${token}`, "_blank");
+  };
+
+  const handleDownloadPdf = (type) => {
+    const token = localStorage.getItem("token");
+    const url = `${API.defaults.baseURL}/reports/${type}/pdf`;
     window.open(`${url}?token=${token}`, "_blank");
   };
 
   return (
-    <main className="reports-page">
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
       <header className="page-header">
-        <div>
-          <h1>Financial Reports & Ledger Book</h1>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Financial Reports & Ledger Book</h1>
           <p>Download system ledgers, compile cash books, and run balance sheets</p>
         </div>
-        <button className="open-form-btn" onClick={fetchStats}>
+        <button className="btn-enterprise btn-primary" onClick={fetchStats}>
           <RefreshCw size={18} />
           Recalculate Balances
         </button>
       </header>
 
       {loading ? (
-        <div className="loading-state">
+        <div className="empty-state">
           <RefreshCw size={36} className="spin-icon" />
-          <p>Compiling financial statements...</p>
+          <p style={{ marginTop: '1rem' }}>Compiling financial statements...</p>
         </div>
       ) : (
         <>
           {/* Summary Cards */}
-          <section className="reports-grid">
-            <div className="report-card">
-              <Users size={28} className="report-icon icon-blue" />
+          <section className="dashboard-stats" style={{ marginBottom: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                <Users size={28} />
+              </div>
               <div>
-                <h4>Total Active Members</h4>
-                <h2>{stats.totalMembers}</h2>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Total Active Members</h4>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalMembers}</h2>
               </div>
             </div>
 
-            <div className="report-card">
-              <BankIcon size={28} className="report-icon icon-green" />
+            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#dcfce7', color: '#15803d' }}>
+                <BankIcon size={28} />
+              </div>
               <div>
-                <h4>Share Capital Pool</h4>
-                <h2>₹{stats.totalShareCapital.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Share Capital Pool</h4>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.totalShareCapital.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
               </div>
             </div>
 
-            <div className="report-card">
-              <CreditCard size={28} className="report-icon icon-yellow" />
+            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#fef3c7', color: '#b45309' }}>
+                <CreditCard size={28} />
+              </div>
               <div>
-                <h4>Outstanding Credit (Loans)</h4>
-                <h2>₹{stats.outstandingLoansAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Outstanding Credit (Loans)</h4>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.outstandingLoansAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
               </div>
             </div>
 
-            <div className="report-card">
-              <Landmark size={28} className="report-icon icon-red" />
+            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
+              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#fee2e2', color: '#b91c1c' }}>
+                <Landmark size={28} />
+              </div>
               <div>
-                <h4>Cash Book Balance</h4>
-                <h2>₹{stats.cashBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Cash Book Balance</h4>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.cashBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
               </div>
             </div>
           </section>
 
           {/* Export Downloads Section */}
-          <section className="export-section">
-            <h3>Download System Ledgers</h3>
-            <div className="export-buttons-grid">
-              <div className="export-card">
-                <FileText size={32} />
-                <div>
-                  <h4>Members Roster Registry</h4>
-                  <p>Includes names, staff codes, designation, and share capital</p>
+          <section>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Download System Ledgers</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
+                  <FileText size={32} />
                 </div>
-                <button onClick={() => handleDownloadCsv("members")} className="download-btn">
-                  <Download size={16} />
-                  Download CSV
-                </button>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Members Roster Registry</h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.4 }}>Includes names, staff codes, designation, and share capital</p>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: 'auto', width: '100%' }}>
+                  <button onClick={() => handleDownloadCsv("members")} className="btn-enterprise btn-secondary" style={{ flex: 1 }}>
+                    <Download size={16} />
+                    CSV
+                  </button>
+                  <button onClick={() => handleDownloadPdf("members")} className="btn-enterprise" style={{ flex: 1, backgroundColor: 'white', color: '#ef4444', border: '1px solid #fca5a5' }}>
+                    <Download size={16} />
+                    PDF
+                  </button>
+                </div>
               </div>
 
-              <div className="export-card">
-                <FileText size={32} />
-                <div>
-                  <h4>Double-Entry Cash Book Ledger</h4>
-                  <p>Full transaction journals containing voucher entries and audits</p>
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
+                  <FileText size={32} />
                 </div>
-                <button onClick={() => handleDownloadCsv("transactions")} className="download-btn">
-                  <Download size={16} />
-                  Download CSV
-                </button>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Double-Entry Cash Book Ledger</h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.4 }}>Full transaction journals containing voucher entries and audits</p>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: 'auto', width: '100%' }}>
+                  <button onClick={() => handleDownloadCsv("transactions")} className="btn-enterprise btn-secondary" style={{ flex: 1 }}>
+                    <Download size={16} />
+                    CSV
+                  </button>
+                  <button onClick={() => handleDownloadPdf("transactions")} className="btn-enterprise" style={{ flex: 1, backgroundColor: 'white', color: '#ef4444', border: '1px solid #fca5a5' }}>
+                    <Download size={16} />
+                    PDF
+                  </button>
+                </div>
               </div>
 
-              <div className="export-card">
-                <FileText size={32} />
-                <div>
-                  <h4>Outstanding Loan Ledger</h4>
-                  <p>EMI payments, outstanding interest, and principal balances</p>
+              <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
+                  <FileText size={32} />
                 </div>
-                <button onClick={() => handleDownloadCsv("loans")} className="download-btn">
-                  <Download size={16} />
-                  Download CSV
-                </button>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Outstanding Loan Ledger</h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.4 }}>EMI payments, outstanding interest, and principal balances</p>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: 'auto', width: '100%' }}>
+                  <button onClick={() => handleDownloadCsv("loans")} className="btn-enterprise btn-secondary" style={{ flex: 1 }}>
+                    <Download size={16} />
+                    CSV
+                  </button>
+                  <button onClick={() => handleDownloadPdf("loans")} className="btn-enterprise" style={{ flex: 1, backgroundColor: 'white', color: '#ef4444', border: '1px solid #fca5a5' }}>
+                    <Download size={16} />
+                    PDF
+                  </button>
+                </div>
               </div>
             </div>
           </section>

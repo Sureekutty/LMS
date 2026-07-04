@@ -83,6 +83,21 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // Update user profile
+    public User updateProfile(String username, com.lms.app.dto.UserProfileRequest request) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getMobileNumber() != null) user.setMobileNumber(request.getMobileNumber());
+        if (request.getProfileImageUrl() != null) user.setProfileImageUrl(request.getProfileImageUrl());
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getDisplayName() != null) user.setDisplayName(request.getDisplayName());
+        
+        return userRepository.save(user);
+    }
+
     public java.util.Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }

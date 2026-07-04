@@ -1,267 +1,34 @@
-.deposits-page {
-  padding: 2.5rem;
-  font-family: 'Manrope', sans-serif;
-  color: #0f172a;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.page-header h1 {
-  font-family: 'Sora', sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.page-header p {
-  color: #475569;
-  font-size: 0.95rem;
-}
-
-.open-form-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
-  transition: all 0.2s ease;
-}
-
-.open-form-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-}
+/* Deposits.css - Component specific styles only */
 
 /* Compounding Calculator styling */
-.calculator-section {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(14, 165, 233, 0.2);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.05);
-}
-
-.calculator-section h3 {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-}
-
 .calculator-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr) 250px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
   align-items: flex-end;
 }
 
-.calculator-grid label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.calculator-grid span {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #475569;
-}
-
-.calculator-grid input,
-.calculator-grid select {
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(14, 165, 233, 0.25);
-  border-radius: 0.75rem;
-  font-size: 0.95rem;
-  outline: none;
-  background: white;
-  transition: all 0.2s ease;
-}
-
-.calculator-grid input:focus,
-.calculator-grid select:focus {
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-}
-
 .calc-result {
-  background: rgba(14, 165, 233, 0.1);
-  border: 1px solid rgba(14, 165, 233, 0.15);
-  border-radius: 0.75rem;
-  padding: 1rem;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
   text-align: center;
 }
 
 .calc-result h4 {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   color: #0369a1;
   margin-bottom: 0.25rem;
+  font-weight: 700;
 }
 
 .maturity-val {
-  font-family: 'Sora', sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0ea5e9;
-}
-
-/* Open Deposit Form wrapper styling */
-.deposit-form-wrapper {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(14, 165, 233, 0.2);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.05);
-}
-
-.deposit-form h3 {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-}
-
-.form-row {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.form-row label {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.deposit-form span {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #475569;
-}
-
-.deposit-form input,
-.deposit-form select {
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(14, 165, 233, 0.25);
-  border-radius: 0.75rem;
-  font-size: 0.95rem;
-  outline: none;
-  background: white;
-}
-
-.deposit-form input:focus,
-.deposit-form select:focus {
-  border-color: #0ea5e9;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.submit-btn {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  padding: 0.75rem 1.5rem;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* Active list styling */
-.deposits-list h2 {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.35rem;
-  margin-bottom: 1.25rem;
-}
-
-.table-wrap {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(14, 165, 233, 0.15);
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-}
-
-.deposits-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.deposits-table th {
-  padding: 1rem 1.25rem;
-  background: rgba(241, 245, 249, 0.8);
-  font-weight: 800;
-  color: #475569;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
-.deposits-table td {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(14, 165, 233, 0.1);
-  font-size: 0.95rem;
-}
-
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.status-badge.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-
-.status-badge.closed {
-  background: rgba(100, 116, 139, 0.15);
-  color: #64748b;
-}
-
-.close-btn {
-  color: #ef4444;
-  border: none;
-  background: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.close-btn:hover {
-  opacity: 0.8;
+  color: #0284c7;
+  letter-spacing: -0.025em;
 }
 
 .loading-state,
@@ -271,12 +38,14 @@
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-secondary);
   gap: 1rem;
+  font-weight: 500;
 }
 
 .spin-icon {
   animation: spin 1s linear infinite;
+  color: var(--primary);
 }
 
 @keyframes spin {
@@ -286,8 +55,5 @@
 @media (max-width: 1024px) {
   .calculator-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .calc-result {
-    grid-column: span 2;
   }
 }
