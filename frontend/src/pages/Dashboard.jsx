@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { 
   Landmark, Users, CreditCard, LogOut, Home, Settings, Bell, RefreshCw, 
   ShieldAlert, FileText, TrendingUp, Search, Sun, MoreVertical, ArrowUpRight, 
-  UserPlus, PlusCircle, ArrowRight, MessageSquare, ChevronRight, ChevronLeft, Zap, PieChart
+  UserPlus, PlusCircle, ArrowRight, MessageSquare, ChevronRight, ChevronLeft, Zap, PieChart as PieChartIcon
 } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import API from "../api/axios";
 import "./Dashboard.css";
 
@@ -356,8 +357,31 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div style={{ padding: "1rem" }}>
-                <div className="pie-chart-mock"></div>
+              <div style={{ padding: "1rem", width: "200px", height: "200px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Share Capital', value: stats.totalShareCapital || 1 },
+                        { name: 'Deposits', value: stats.totalDeposits || 1 }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      <Cell fill="#3b82f6" />
+                      <Cell fill="#10b981" />
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => `₹${value.toLocaleString('en-IN')}`}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 

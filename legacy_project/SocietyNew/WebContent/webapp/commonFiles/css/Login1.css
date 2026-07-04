@@ -1,0 +1,83 @@
+
+        .main {
+            position: fixed;
+            width: 89rem;
+            height: 40rem;
+            overflow: hidden;
+            
+        }
+
+        .main::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('../././images/SPECCSbackground.jpg') no-repeat center center;
+            background-size: cover;
+            
+            z-index: -1;
+        } 
+        
+        .marquee{     	
+        	color: white;
+        	margin-top: -3px;
+        }
+
+.form-control:focus {
+	color: #000;
+	background-color: #fff;
+	border: 2px solid #E8D426;
+	outline: 0;
+	box-shadow: none;
+}
+
+.login-container {
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ height: auto;
+}
+.card {
+      border: none;
+      /*border-radius: 15px;
+       box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1); */
+      width: 26rem;
+	  height: 16rem;
+	  margin-top: 42px;
+	  margin-left: 693px;
+	  /* background-color: #447f8c66; */
+    }
+    .card-header {
+      background-color: rgb(1, 1, 78);
+      color: white;
+      text-align: center;
+      border-radius: 15px 15px 0 0;
+    }
+    .card-body {
+      padding: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .btn-login {
+      background-color: rgb(1, 1, 78);
+      color: white;
+      width: 100%;
+      border-radius: 5px;
+      padding: 0.3rem;
+    }
+    .btn-login:hover {
+      color: white;
+    }
+    .form-control:focus {
+      border-color: #343a40;
+      box-shadow: 0 0 0 0.25rem rgba(52, 58, 64, 0.25);
+    }
+    .password{
+      margin-left: 2.6rem;
+    }
+    .heading-card{
+     padding:0.3rem;
+    }

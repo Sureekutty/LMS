@@ -1,0 +1,60 @@
+<%String ver ="Version 1.0";%>
+<%String centre = "SDSC"; %>
+<%
+String centreText="";
+String centreText1="";
+String centreText2="";
+String centreText3="";
+String centreText4="";
+String centreText5="";
+
+	
+	centreText="SHAR PROJECTS EMPLOYEES CO-OPEARATIVE CREDIT SOCIETY"; 
+	centreText1="SPECCS (No: L 1335 )"; 
+	centreText2="SRIHARIKOTA :524 124 : AP"; 
+	centreText3="Phone : 08623-222085/95";
+	centreText4=ver + "-Date " +new SimpleDateFormat("MMM dd, yyyy - hh:mm").format(new Date());
+	centreText5=(String)session.getAttribute("EMPLOYEECODE")  +"-"+(String)session.getAttribute("EMPLOYEENAME");
+
+
+%>
+
+<!-- <div style="width:95%; margin-left:auto; margin-right:auto; "> -->
+
+
+
+
+<div style="background: black;">
+<table background-color="white"  align="center" width=auto; style="border: 2px #88b1dd solid;   ">
+<tr>
+<td align="left" align="middle" width="100px"><img alt="isro" src="webapp/commonFiles/images/2.png" width="130px" height="100px;" style="margin-right: 50px;border-radius: 100px;">
+</td>
+
+<td align = 'right' width = 100% >
+<center>
+<font size="3" color="yellow"><b><%=centreText%></b><br></font>
+<font size="3" color="yellow"><b><%=centreText1%></b><br></font>
+<font size="3" color="yellow"><b><%=centreText2%></b><br></font>
+<font size="3" color="white"><b><%=centreText3%></b></font><br>
+<font size="4" color="white"><%=centreText5%></font>
+</center>
+<!--<font align = "right" size="2" color="#4976BA"><%=centreText4%></font>
+<font align = "right" size="2" color="#4976BA"><br><%=centreText4%></font>-->
+
+</td>
+</td>
+<td align="right" align="middle" width="100px"><img alt="img" src="webapp/commonFiles/images/SPECCS logo.png" width="130px" height="100px;" >
+<font align = "right" size="2" style="margin-right: 190px;color: white;"><br><%=centreText4%></font>
+</td>
+</tr>
+<!--
+<tr>
+<td colspan = '2' align = "left">
+<font color="#4976BA"></font>
+ <h5 align="right" style="color: #4976BA;"><%=ver %> - Date:<%=new SimpleDateFormat("MMM dd, yyyy - hh:mm").format(new Date()) %></h5>
+</td>
+</tr>
+-->
+
+</table>
+</div>

@@ -14,6 +14,7 @@ export default function ProfileModal({ isOpen, onClose }) {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -40,6 +41,30 @@ export default function ProfileModal({ isOpen, onClose }) {
       setError('Failed to load profile details.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    setUploading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await API.post('/users/me/photo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setProfile({ ...profile, profileImageUrl: res.data.profileImageUrl });
+      setSuccess('Profile photo updated successfully!');
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: res.data }));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload photo.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -89,8 +114,9 @@ export default function ProfileModal({ isOpen, onClose }) {
               </div>
               <div style={{ flex: 1 }}>
                 <label className="enterprise-form-group" style={{ marginBottom: 0 }}>
-                  <span className="enterprise-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={14} /> Profile Picture URL</span>
-                  <input type="text" className="enterprise-input" placeholder="https://..." value={profile.profileImageUrl} onChange={e => setProfile({...profile, profileImageUrl: e.target.value})} />
+                  <span className="enterprise-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={14} /> Upload Profile Picture</span>
+                  <input type="file" accept="image/*" className="enterprise-input" onChange={handlePhotoUpload} style={{ paddingTop: '10px' }} />
+                  {uploading && <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>Uploading...</span>}
                 </label>
               </div>
             </div>
