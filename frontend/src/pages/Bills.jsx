@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, PlusCircle, RefreshCw, FileText, Download, DollarSign, Printer, CheckCircle } from "lucide-react";
 import API from "../api/axios";
@@ -114,26 +114,11 @@ export default function Bills() {
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Periodic Demand Billing (Invoices)</h1>
           <p>{isMember ? "Your monthly society billing statements and statements." : "Process, review, and recover monthly billing demands."}</p>
         </div>
-        {!isMember && (isAdmin || isAccountant) && (
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <input
-              className="enterprise-input"
-              type="month"
-              value={monthStr}
-              onChange={(e) => setMonthStr(e.target.value)}
-              style={{ width: 'auto' }}
-            />
-            <button className="btn-enterprise btn-primary" onClick={handleGenerateBills} disabled={loading}>
-              <PlusCircle size={18} />
-              {loading ? "Generating..." : "Generate Demands"}
-            </button>
-          </div>
-        )}
       </header>
 
       {error && <div className="alert alert-danger" style={{ marginBottom: 15 }}>{error}</div>}
@@ -165,7 +150,26 @@ export default function Bills() {
 
       {/* Bills Ledger */}
       <section>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{isMember ? "Your Invoices History" : `Consolidated Billing Registry - ${monthStr}`}</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>{isMember ? "Your Invoices History" : `Consolidated Billing Registry - ${monthStr}`}</h2>
+          <div className="table-header-group">
+            {!isMember && (isAdmin || isAccountant) && (
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <input
+                  className="enterprise-input"
+                  type="month"
+                  value={monthStr}
+                  onChange={(e) => setMonthStr(e.target.value)}
+                  style={{ width: 'auto', padding: '0.4rem 0.75rem', height: 'auto', fontSize: '0.9rem' }}
+                />
+                <button className="btn-enterprise btn-primary" onClick={handleGenerateBills} disabled={loading}>
+                  <PlusCircle size={16} />
+                  {loading ? "Generating..." : "Generate Demands"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         {loading ? (
           <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />

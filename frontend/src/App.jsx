@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -6,6 +7,7 @@ import Deposits from './pages/Deposits';
 import Payments from './pages/Payments';
 import Reports from './pages/Reports';
 import Loans from './pages/Loans';
+import LoanDetails from './pages/LoanDetails';
 import Audits from './pages/Audits';
 import Members from './pages/Members';
 import MemberForm from './pages/MemberForm';
@@ -20,6 +22,16 @@ import Layout from './components/Layout';
 import AIAssistant from './components/AIAssistant';
 
 function App() {
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.remove('dark-theme', 'thunder-theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-theme');
+    } else if (savedTheme === 'thunder') {
+      document.body.classList.add('thunder-theme');
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -86,6 +98,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout><Loans /></Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/loans/:id"
+          element={
+            <ProtectedRoute>
+              <Layout><LoanDetails /></Layout>
             </ProtectedRoute>
           }
         />

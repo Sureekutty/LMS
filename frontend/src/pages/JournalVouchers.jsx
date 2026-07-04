@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import { Plus, Trash2, Save, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, CheckCircle, AlertCircle, ArrowLeft, RefreshCw, PlusCircle, Eye } from 'lucide-react';
 import './JournalVouchers.css';
 
 export default function JournalVouchers() {
+  const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(false);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [members, setMembers] = useState([]);
   
@@ -138,20 +141,23 @@ export default function JournalVouchers() {
   };
 
   return (
-    <div className="jv-container">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Journal Vouchers</h1>
-          <p className="page-subtitle">Advanced Double-Entry Accounting</p>
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Journal Vouchers</h1>
+          <p>Advanced Double-Entry Accounting</p>
         </div>
       </header>
 
-      <div className="content-grid">
-        <div className="main-section">
-          <div className="glass-card">
-            <h2 className="card-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={20} className="text-primary" /> Create New Voucher
-            </h2>
+      {/* Form Overlay Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Create New Journal Voucher</h3>
             
             {error && <div className="alert alert-danger" style={{ marginBottom: '1rem' }}><AlertCircle size={16}/> {error}</div>}
             {success && <div className="alert alert-success" style={{ marginBottom: '1rem' }}><CheckCircle size={16}/> {success}</div>}
@@ -200,7 +206,7 @@ export default function JournalVouchers() {
 
                     <input type="number" step="0.01" min="0" className="enterprise-input text-right" placeholder="0.00" value={entry.amount} onChange={e => updateEntry(entry.id, 'amount', e.target.value)} required />
                     
-                    <button type="button" className="icon-btn danger" onClick={() => removeRow(entry.id)} disabled={entries.length <= 2}>
+                    <button type="button" className="icon-btn" style={{ background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5' }} onClick={() => removeRow(entry.id)} disabled={entries.length <= 2}>
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -225,39 +231,64 @@ export default function JournalVouchers() {
               </div>
 
               <div className="form-actions" style={{ marginTop: '2rem' }}>
-                <button type="submit" className="btn-enterprise btn-primary" disabled={loading || !isBalanced} style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}>
-                  <Save size={18} /> {loading ? 'Posting...' : 'Post Journal Voucher'}
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-enterprise btn-primary" disabled={loading || !isBalanced}>
+                  {loading ? 'Posting...' : 'Post Journal Voucher'}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
 
-        <div className="sidebar-section">
-          <div className="glass-card">
-            <h3 className="card-title" style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Recent Vouchers</h3>
-            {history.length === 0 ? (
-              <p className="text-secondary text-sm">No recent journal vouchers.</p>
-            ) : (
-              <div className="recent-jv-list">
-                {history.map((jv, i) => (
-                  <div key={i} className="recent-jv-item">
-                    <div className="jv-item-header">
-                      <span className="jv-ref">{jv.referenceNo}</span>
-                      <span className="jv-date">{new Date(jv.date).toLocaleDateString()}</span>
-                    </div>
-                    <p className="jv-desc">{jv.description}</p>
-                    <div className="jv-item-footer">
-                      <span className="jv-status badge badge-active">{jv.status}</span>
-                      <strong className="jv-amount">₹{jv.total.toFixed(2)}</strong>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      {/* Journal Vouchers History Table */}
+      <section>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Journal Vouchers Registry</h2>
+          <div className="table-header-group">
+            <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+              <PlusCircle size={16} /> Post Journal Voucher
+            </button>
           </div>
         </div>
-      </div>
-    </div>
+        
+        {loading && history.length === 0 ? (
+          <div className="empty-state">
+            <RefreshCw size={28} className="spin-icon" />
+            <p style={{ marginTop: '1rem' }}>Compiling vouchers...</p>
+          </div>
+        ) : history.length === 0 ? (
+          <div className="empty-state">
+            <FileText size={36} />
+            <p style={{ marginTop: '1rem' }}>No recent journal vouchers.</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="enterprise-table">
+              <thead>
+                <tr>
+                  <th>Voucher Ref</th>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Total Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((jv, i) => (
+                  <tr key={i}>
+                    <td><strong>{jv.referenceNo}</strong></td>
+                    <td>{new Date(jv.date).toLocaleDateString("en-IN")}</td>
+                    <td>{jv.description}</td>
+                    <td style={{ fontWeight: 700 }}>₹{jv.total.toFixed(2)}</td>
+                    <td><span className="badge badge-success">{jv.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }

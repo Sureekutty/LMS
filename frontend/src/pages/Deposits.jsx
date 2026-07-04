@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye } from "lucide-react";
+import { Landmark, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye, Search, FileSpreadsheet, Upload } from "lucide-react";
 import API from "../api/axios";
 import "./Deposits.css";
 
@@ -19,9 +19,12 @@ export default function Deposits() {
   const [loading, setLoading] = useState(true);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [bulkText, setBulkText] = useState("");
+  const [bulkFile, setBulkFile] = useState(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState("");
@@ -126,77 +129,37 @@ export default function Deposits() {
     setError("");
 
     try {
-      // 1. Load Razorpay Script
-      const res = await import("../utils/razorpay").then(m => m.loadRazorpayScript());
-      if (!res) {
-        setError("Razorpay SDK failed to load. Check connection.");
+      const principal = parseFloat(form.principalAmount);
+      const duration = parseInt(form.durationMonths);
+      
+      // Validate deposit type constraints
+      const selectedType = depositTypes.find(t => t.id === parseInt(form.depositTypeId));
+      if (selectedType && selectedType.minDurationMonths && duration < selectedType.minDurationMonths) {
+        setError(`The minimum duration for ${selectedType.typeCode} is ${selectedType.minDurationMonths} months.`);
         setFormLoading(false);
         return;
       }
 
-      const principal = parseFloat(form.principalAmount);
-
-      // 2. Create Order on Backend
-      const orderRes = await API.post("/payments/create-order", {
-        amount: principal,
-        referenceType: "DEPOSIT",
-        referenceId: form.memberId
-      });
-
-      const { orderId, amount, currency } = orderRes.data;
-
-      // 3. Configure Razorpay Options
-      const options = {
-        key: "rzp_test_YourTestKeyIdHere", // MUST MATCH BACKEND!
-        amount: amount.toString(),
-        currency: currency,
-        name: "LMS Enterprise",
-        description: "Open New Deposit",
-        order_id: orderId,
-        handler: async function (response) {
-          try {
-            // 4. Verify Payment on Backend
-            await API.post("/payments/verify", {
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature
-            });
-
-            // 5. Create Deposit after successful payment
-            const payload = {
-              member: { id: form.memberId },
-              depositType: { id: form.depositTypeId },
-              principalAmount: principal,
-              durationMonths: parseInt(form.durationMonths),
-            };
-      
-            await API.post("/deposits", payload);
-            setFormSuccess("Payment successful & Deposit account opened!");
-            setForm(emptyForm);
-            setShowForm(false);
-            fetchInitialData();
-          } catch (err) {
-            setError("Payment verification failed on server.");
-          }
-        },
-        prefill: {
-          name: "Member Name",
-          email: "member@example.com",
-          contact: "9999999999"
-        },
-        theme: {
-          color: "#4318ff"
-        }
+      const payload = {
+        member: { id: form.memberId },
+        depositType: { id: form.depositTypeId },
+        principalAmount: principal,
+        durationMonths: duration,
       };
 
-      const rzp1 = new window.Razorpay(options);
-      rzp1.on("payment.failed", function (response) {
-        setError("Payment Failed: " + response.error.description);
-      });
-      rzp1.open();
+      await API.post("/deposits", payload);
+      setFormSuccess("Deposit account opened successfully!");
       
+      // Auto-hide form after success
+      setTimeout(() => {
+        setForm(emptyForm);
+        setShowForm(false);
+        setFormSuccess("");
+        fetchInitialData();
+      }, 1500);
+
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to initiate payment.");
+      setError(err.response?.data?.error || err.response?.data?.message || "Failed to initiate deposit.");
     } finally {
       setFormLoading(false);
     }
@@ -204,41 +167,58 @@ export default function Deposits() {
 
   const handleBulkThriftUpload = async (e) => {
     e.preventDefault();
-    if (!bulkText.trim()) return;
-    setBulkLoading(true);
-    try {
-      const lines = bulkText.split("\n");
-      const records = lines
-        .map(line => {
-          const parts = line.split(",");
-          if (parts.length < 2) return null;
-          const codeOrNo = parts[0].trim();
-          const amt = parseFloat(parts[1].trim());
-          if (!codeOrNo || isNaN(amt)) return null;
-
-          return {
-            staffCode: codeOrNo.startsWith("MEM") ? "" : codeOrNo,
-            membershipNo: codeOrNo.startsWith("MEM") ? codeOrNo : "",
-            amount: amt
-          };
-        })
-        .filter(Boolean);
-
-      if (records.length === 0) {
-        alert("No valid records found. Format: Code,Amount (e.g. SC101,150.00)");
-        setBulkLoading(false);
-        return;
-      }
-
-      await API.post("/deposits/upload-thrift", records);
-      alert("Successfully posted bulk Thrift subscriptions!");
-      setBulkText("");
-      fetchInitialData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to process bulk thrift upload.");
-    } finally {
-      setBulkLoading(false);
+    if (!bulkFile) {
+      alert("Please select a CSV file first.");
+      return;
     }
+    setBulkLoading(true);
+    
+    import("papaparse").then((Papa) => {
+      Papa.default.parse(bulkFile, {
+        header: false,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          try {
+            const records = results.data
+              .map(parts => {
+                if (parts.length < 2) return null;
+                const codeOrNo = (parts[0] || "").trim();
+                const amt = parseFloat((parts[1] || "").trim());
+                if (!codeOrNo || isNaN(amt)) return null;
+
+                return {
+                  staffCode: codeOrNo.startsWith("MEM") ? "" : codeOrNo,
+                  membershipNo: codeOrNo.startsWith("MEM") ? codeOrNo : "",
+                  amount: amt
+                };
+              })
+              .filter(Boolean);
+
+            if (records.length === 0) {
+              alert("No valid records found in CSV. Format: Code,Amount");
+              setBulkLoading(false);
+              return;
+            }
+
+            await API.post("/deposits/upload-thrift", records);
+            alert("Successfully posted bulk Thrift subscriptions!");
+            setBulkFile(null);
+            if (document.getElementById("csvFileInput")) {
+              document.getElementById("csvFileInput").value = "";
+            }
+          } catch (err) {
+            alert("Error posting bulk subscriptions.");
+            console.error(err);
+          } finally {
+            setBulkLoading(false);
+          }
+        },
+        error: (err) => {
+          alert("Error parsing CSV: " + err.message);
+          setBulkLoading(false);
+        }
+      });
+    });
   };
 
   const handleCloseDeposit = async (id) => {
@@ -253,22 +233,35 @@ export default function Deposits() {
     }
   };
 
+  const downloadSampleCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8,MembershipNo,Amount\nMEM101,150.00\nMEM102,200.00";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bulk_thrift_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredDeposits = deposits.filter(d => 
+    (d.depositNo || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.member?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.member?.membershipNo || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.depositType?.typeName || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <main className="page-container animate__animated animate__fadeIn">
       <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Deposits & Savings</h1>
           <p>Configure, open, and review interest accruals on savings accounts</p>
         </div>
-        {(isAdmin || isClerk) && (
-          <button className="btn-enterprise btn-primary" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} /> Open Deposit Account
-          </button>
-        )}
       </header>
 
       {/* Dynamic Compounding Calculator */}
@@ -301,98 +294,136 @@ export default function Deposits() {
         </div>
       </section>
 
-      {/* Thrift Uploading console for Admin and Clerks */}
-      {(isAdmin || isClerk) && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Bulk Thrift Uploading Dispatcher</h3>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: '1.5rem' }}>
-            Input bulk subscription updates. Paste CSV rows in format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
-          </p>
-          <form onSubmit={handleBulkThriftUpload}>
-            <textarea
-              className="enterprise-input"
-              placeholder="SC101,150.00&#10;MEM001,200.00"
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-              style={{ width: "100%", height: 110, fontFamily: "monospace", resize: 'vertical' }}
-              required
-            />
-            <div style={{ marginTop: '1rem', textAlign: "right" }}>
-              <button type="submit" disabled={bulkLoading} className="btn-enterprise btn-primary">
-                {bulkLoading ? "Posting Subscriptions..." : "Post Bulk Subscriptions"}
-              </button>
-            </div>
-          </form>
-        </section>
+      {/* Thrift Uploading Modal overlay */}
+      {showBulkForm && (
+        <div className="modal-overlay" onClick={() => setShowBulkForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Bulk Thrift Uploading Dispatcher</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: '1.5rem' }}>
+              Input bulk subscription updates. Format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
+            </p>
+            <form onSubmit={handleBulkThriftUpload}>
+              <div style={{ padding: '2rem', border: '2px dashed #cbd5e1', borderRadius: 'var(--radius-md)', background: '#f8fafc', textAlign: 'center', marginBottom: '1.5rem' }}>
+                <input
+                  type="file"
+                  id="csvFileInput"
+                  accept=".csv"
+                  onChange={(e) => setBulkFile(e.target.files[0])}
+                  style={{ width: "100%", padding: "10px" }}
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowBulkForm(false)}>Cancel</button>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={downloadSampleCSV}>
+                  <FileSpreadsheet size={16} /> Sample CSV
+                </button>
+                <button type="submit" disabled={bulkLoading} className="btn-enterprise btn-primary">
+                  {bulkLoading ? "Posting..." : "Post Subscriptions"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {/* Open Deposit Account Form */}
+      {/* Open Deposit Account Form Modal */}
       {showForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handleOpenDeposit}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Open Deposit Account</h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Select Member</span>
-                <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
-                  <option value="">-- Choose Member --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
-                  ))}
-                </select>
-              </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleOpenDeposit}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>Open Deposit Account</h3>
               
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Deposit Type</span>
-                <select className="enterprise-select" value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
-                  <option value="">-- Choose Type --</option>
-                  {depositTypes.map(t => (
-                    <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
-                  ))}
-                  {/* Fallbacks if /api/deposits/types didn't return values */}
-                  {depositTypes.length === 0 && (
-                    <>
-                      <option value="1">Fixed Deposit (FD)</option>
-                      <option value="2">Recurring Deposit (RD)</option>
-                    </>
-                  )}
-                </select>
-              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Select Member</span>
+                  <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
+                    <option value="">-- Choose Member --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
+                    ))}
+                  </select>
+                </label>
+                
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Deposit Type</span>
+                  <select className="enterprise-select" value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
+                    <option value="">-- Choose Type --</option>
+                    {depositTypes.map(t => (
+                      <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
+                    ))}
+                    {/* Fallbacks if /api/deposits/types didn't return values */}
+                    {depositTypes.length === 0 && (
+                      <>
+                        <option value="1">Fixed Deposit (FD)</option>
+                        <option value="2">Recurring Deposit (RD)</option>
+                      </>
+                    )}
+                  </select>
+                </label>
 
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Deposit Amount (₹)</span>
-                <input className="enterprise-input" type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
-              </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Deposit Amount (₹)</span>
+                  <input className="enterprise-input" type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
+                </label>
 
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Tenure (Months)</span>
-                <input className="enterprise-input" type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
-              </label>
-            </div>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Tenure (Months)</span>
+                  <input className="enterprise-input" type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
+                </label>
+              </div>
 
-            {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
-            {error && <div className="alert alert-danger mt-4">{error}</div>}
+              {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
+              {error && <div className="alert alert-danger mt-4">{error}</div>}
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
-                {formLoading ? "Opening..." : "Open Account"}
-              </button>
-            </div>
-          </form>
-        </section>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
+                  {formLoading ? "Opening..." : "Open Account"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Active Deposit list */}
       <section>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Active Deposit Accounts</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Active Deposit Accounts</h2>
+          
+          <div className="members-header-actions" style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
+            <div className="search-bar-wrapper">
+              <Search size={18} color="#94a3b8" />
+              <input 
+                type="text" 
+                placeholder="Search by name, ID, or account..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="table-header-group">
+              {(isAdmin || isClerk) && (
+                <>
+                  <button className="btn-enterprise btn-secondary" onClick={() => setShowBulkForm(true)}>
+                    <Upload size={16} /> Bulk Thrift Upload
+                  </button>
+                  <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                    <PlusCircle size={16} /> Open Deposit Account
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
         {loading ? (
           <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />
             <p style={{ marginTop: '1rem' }}>Fetching ledger records...</p>
           </div>
-        ) : deposits.length === 0 ? (
+        ) : filteredDeposits.length === 0 ? (
           <div className="empty-state">
             <Wallet size={36} />
             <p style={{ marginTop: '1rem' }}>No active deposit records found.</p>
@@ -414,15 +445,18 @@ export default function Deposits() {
                 </tr>
               </thead>
               <tbody>
-                {deposits.map(d => (
-                  <tr key={d.id}>
-                    <td><strong>{d.depositNo}</strong></td>
-                    <td>{d.member?.name || "N/A"}</td>
-                    <td>{d.depositType?.typeName || "FD/RD Account"}</td>
-                    <td>₹{d.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-                    <td>{d.interestRate}%</td>
-                    <td>{new Date(d.maturityDate).toLocaleDateString("en-IN")}</td>
-                    <td>₹{d.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                {filteredDeposits.map(d => (
+                  <tr key={d.id} className="interactive-row">
+                    <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{d.depositNo}</td>
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{d.member?.name || "N/A"}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{d.member?.membershipNo}</div>
+                    </td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{d.depositType?.typeName || "FD/RD Account"}</td>
+                    <td style={{ fontWeight: 700 }}>₹{d.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{d.interestRate}%</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{new Date(d.maturityDate).toLocaleDateString("en-IN")}</td>
+                    <td style={{ fontWeight: 700 }}>₹{d.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                     <td>
                       <span className={`badge badge-${
                         d.status === 'ACTIVE' ? 'success' :

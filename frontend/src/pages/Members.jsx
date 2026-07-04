@@ -98,6 +98,21 @@ function Members() {
     );
   }, [members, searchQuery]);
 
+  const handleExportCsv = async () => {
+    try {
+      const res = await API.get(`/reports/members/csv`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `members_report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      alert("Failed to download CSV report.");
+    }
+  };
+
   return (
     <div className="page-container animate__animated animate__fadeIn members-container">
       <div className="page-header" style={{ marginBottom: '2rem' }}>
@@ -105,13 +120,8 @@ function Members() {
           <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             User Management
           </span>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>Member Directory</h1>
+          <h1 className="gradient-heading">Member Directory</h1>
         </div>
-        {isAdminOrClerk && (
-          <button className="btn-enterprise btn-primary" onClick={openAddForm}>
-            <Plus size={18} /> Enroll New Member
-          </button>
-        )}
       </div>
 
       <div className="members-header-actions">
@@ -126,9 +136,14 @@ function Members() {
         </div>
         
         <div className="table-header-group">
-          <button className="btn-enterprise btn-secondary" onClick={() => alert("Exporting to Excel...")}>
+          <button className="btn-enterprise btn-secondary" onClick={handleExportCsv}>
             <FileSpreadsheet size={16} /> Export CSV
           </button>
+          {isAdminOrClerk && (
+            <button className="btn-enterprise btn-primary" onClick={openAddForm}>
+              <Plus size={18} /> Enroll New Member
+            </button>
+          )}
         </div>
       </div>
 
@@ -164,13 +179,13 @@ function Members() {
                 ) : (
                   filteredMembers.map((m) => (
                     <tr key={m.id} className="interactive-row">
-                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}>
                             {m.name ? m.name.charAt(0).toUpperCase() : 'M'}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span>{m.name}</span>
+                            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{m.name}</span>
                             {(m.staffCode || m.designation?.toLowerCase().includes("staff") || m.designation?.toLowerCase().includes("admin")) && (
                               <span style={{ fontSize: '0.7rem', background: '#fef08a', color: '#854d0e', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '2px', fontWeight: 700 }}>
                                 STAFF
@@ -179,23 +194,23 @@ function Members() {
                           </div>
                         </div>
                       </td>
-                      <td>{m.membershipNo}</td>
-                      <td>{m.designation || '-'}</td>
-                      <td>{m.staffCode || '-'}</td>
-                      <td>{m.phoneNo || '-'}</td>
+                      <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{m.membershipNo}</td>
+                      <td style={{ color: '#64748b', fontWeight: 600 }}>{m.designation || '-'}</td>
+                      <td style={{ color: '#64748b', fontWeight: 600 }}>{m.staffCode || '-'}</td>
+                      <td style={{ color: '#64748b', fontWeight: 600 }}>{m.phoneNo || '-'}</td>
                       <td>
                         <span className={`badge ${m.isActive ? "badge-success" : "badge-danger"}`}>
                           {m.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <button className="action-icon-btn btn-view" title="View Profile" onClick={() => setSelectedMember(m)}>
-                            <Eye size={18} />
+                        <div style={{ display: "flex", gap: "8px", alignItems: 'center' }}>
+                          <button className="btn-enterprise btn-secondary" onClick={() => setSelectedMember(m)} style={{ padding: '0.4rem 0.6rem' }}>
+                            Inspect
                           </button>
                           {isAdminOrClerk && (
-                            <button className="action-icon-btn btn-edit" title="Edit Member" onClick={() => openEditForm(m)}>
-                              <ChevronRight size={18} />
+                            <button className="btn-enterprise btn-primary" onClick={() => openEditForm(m)} style={{ padding: '0.4rem 0.6rem' }}>
+                              Edit
                             </button>
                           )}
                         </div>

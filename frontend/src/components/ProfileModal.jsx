@@ -113,11 +113,16 @@ export default function ProfileModal({ isOpen, onClose }) {
                 {!profile.profileImageUrl && (profile.firstName ? profile.firstName.charAt(0) : 'U')}
               </div>
               <div style={{ flex: 1 }}>
-                <label className="enterprise-form-group" style={{ marginBottom: 0 }}>
+                <div className="enterprise-form-group" style={{ marginBottom: 0 }}>
                   <span className="enterprise-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={14} /> Upload Profile Picture</span>
-                  <input type="file" accept="image/*" className="enterprise-input" onChange={handlePhotoUpload} style={{ paddingTop: '10px' }} />
-                  {uploading && <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>Uploading...</span>}
-                </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                    <label style={{ cursor: 'pointer', background: 'var(--primary)', color: 'white', padding: '0.4rem 1rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}>
+                      Choose Image
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                    </label>
+                    {uploading && <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>Uploading...</span>}
+                  </div>
+                </div>
               </div>
             </div>
 

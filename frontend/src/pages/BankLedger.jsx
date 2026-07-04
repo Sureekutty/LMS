@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Landmark, PlusCircle, RefreshCw, ArrowLeft, ArrowUpRight, ArrowDownLeft, Calendar, FileText } from "lucide-react";
 import API from "../api/axios";
@@ -114,23 +114,11 @@ export default function BankLedger() {
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Society Bank Accounts & Balances</h1>
           <p>Track cash reserves, reconcile bank accounts, and log ledger transactions.</p>
         </div>
-        {(isAdmin || isAccountant || isClerk) && (
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn-enterprise btn-primary" onClick={() => { setShowAccountForm(true); setShowTxnForm(false); }}>
-              <PlusCircle size={18} />
-              Open Bank Account
-            </button>
-            <button className="btn-enterprise btn-success" onClick={() => { setShowTxnForm(true); setShowAccountForm(false); }}>
-              <PlusCircle size={18} />
-              Post Txn (Inward/Outward)
-            </button>
-          </div>
-        )}
       </header>
 
       {error && <div className="alert alert-danger" style={{ marginBottom: 15 }}>{error}</div>}
@@ -139,80 +127,86 @@ export default function BankLedger() {
 
       {/* Account Creation Modal */}
       {showAccountForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handleCreateAccount}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Open Society Bank Account</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Account Name</span>
-                <input className="enterprise-input" type="text" placeholder="e.g. Operating Savings" value={accountForm.accountName} onChange={(e) => setAccountForm({ ...accountForm, accountName: e.target.value })} required />
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Account Number</span>
-                <input className="enterprise-input" type="text" placeholder="Account Number" value={accountForm.accountNumber} onChange={(e) => setAccountForm({ ...accountForm, accountNumber: e.target.value })} required />
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Bank Name</span>
-                <input className="enterprise-input" type="text" placeholder="Bank Name" value={accountForm.bankName} onChange={(e) => setAccountForm({ ...accountForm, bankName: e.target.value })} required />
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Branch Name</span>
-                <input className="enterprise-input" type="text" placeholder="Branch Name" value={accountForm.branchName} onChange={(e) => setAccountForm({ ...accountForm, branchName: e.target.value })} required />
-              </label>
-              <label className="enterprise-form-group full-width" style={{ gridColumn: 'span 2' }}>
-                <span className="enterprise-label">Initial Balance (₹)</span>
-                <input className="enterprise-input" type="number" placeholder="0.00" value={accountForm.balance} onChange={(e) => setAccountForm({ ...accountForm, balance: e.target.value })} />
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowAccountForm(false)}>Cancel</button>
-              <button type="submit" className="btn-enterprise btn-primary">Create Account</button>
-            </div>
-          </form>
-        </section>
+        <div className="modal-overlay" onClick={() => setShowAccountForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleCreateAccount}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Open Society Bank Account</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Account Name</span>
+                  <input className="enterprise-input" type="text" placeholder="e.g. Operating Savings" value={accountForm.accountName} onChange={(e) => setAccountForm({ ...accountForm, accountName: e.target.value })} required />
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Account Number</span>
+                  <input className="enterprise-input" type="text" placeholder="Account Number" value={accountForm.accountNumber} onChange={(e) => setAccountForm({ ...accountForm, accountNumber: e.target.value })} required />
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Bank Name</span>
+                  <input className="enterprise-input" type="text" placeholder="Bank Name" value={accountForm.bankName} onChange={(e) => setAccountForm({ ...accountForm, bankName: e.target.value })} required />
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Branch Name</span>
+                  <input className="enterprise-input" type="text" placeholder="Branch Name" value={accountForm.branchName} onChange={(e) => setAccountForm({ ...accountForm, branchName: e.target.value })} required />
+                </label>
+                <label className="enterprise-form-group full-width" style={{ gridColumn: 'span 2', minWidth: 0 }}>
+                  <span className="enterprise-label">Initial Balance (₹)</span>
+                  <input className="enterprise-input" type="number" placeholder="0.00" value={accountForm.balance} onChange={(e) => setAccountForm({ ...accountForm, balance: e.target.value })} />
+                </label>
+              </div>
+              
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowAccountForm(false)}>Cancel</button>
+                <button type="submit" className="btn-enterprise btn-primary">Create Account</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {/* Transaction Posting Modal */}
+      {/* Transaction Modal */}
       {showTxnForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handlePostTransaction}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Post Bank Transaction</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Select Account</span>
-                <select className="enterprise-select" value={txnForm.accountId} onChange={(e) => setTxnForm({ ...txnForm, accountId: e.target.value })} required>
-                  <option value="">-- Select Bank Account --</option>
-                  {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.bankName} - {acc.accountName} ({acc.accountNumber})</option>
-                  ))}
-                </select>
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Transaction Type</span>
-                <select className="enterprise-select" value={txnForm.type} onChange={(e) => setTxnForm({ ...txnForm, type: e.target.value })} required>
-                  <option value="DEBIT">Deposit / Inward Receipt</option>
-                  <option value="CREDIT">Withdrawal / Outward Payment</option>
-                </select>
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Amount (₹)</span>
-                <input className="enterprise-input" type="number" step="0.01" placeholder="0.00" value={txnForm.amount} onChange={(e) => setTxnForm({ ...txnForm, amount: e.target.value })} required />
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">UTR / Reference No</span>
-                <input className="enterprise-input" type="text" placeholder="Transaction Ref / Cheque No" value={txnForm.referenceNo} onChange={(e) => setTxnForm({ ...txnForm, referenceNo: e.target.value })} />
-              </label>
-              <label className="enterprise-form-group full-width" style={{ gridColumn: 'span 2' }}>
-                <span className="enterprise-label">Remarks / Description</span>
-                <input className="enterprise-input" type="text" placeholder="Reason for payment/deposit" value={txnForm.description} onChange={(e) => setTxnForm({ ...txnForm, description: e.target.value })} />
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowTxnForm(false)}>Cancel</button>
-              <button type="submit" className="btn-enterprise btn-primary">Post Transaction</button>
-            </div>
-          </form>
-        </section>
+        <div className="modal-overlay" onClick={() => setShowTxnForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handlePostTransaction}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Post Bank Transaction</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Select Account</span>
+                  <select className="enterprise-select" value={txnForm.accountId} onChange={(e) => setTxnForm({ ...txnForm, accountId: e.target.value })} required>
+                    <option value="">-- Select Bank Account --</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.bankName} - {acc.accountName} ({acc.accountNumber})</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Transaction Type</span>
+                  <select className="enterprise-select" value={txnForm.type} onChange={(e) => setTxnForm({ ...txnForm, type: e.target.value })} required>
+                    <option value="DEBIT">Deposit / Inward Receipt</option>
+                    <option value="CREDIT">Withdrawal / Outward Payment</option>
+                  </select>
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Amount (₹)</span>
+                  <input className="enterprise-input" type="number" step="0.01" placeholder="0.00" value={txnForm.amount} onChange={(e) => setTxnForm({ ...txnForm, amount: e.target.value })} required />
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">UTR / Reference No</span>
+                  <input className="enterprise-input" type="text" placeholder="Transaction Ref / Cheque No" value={txnForm.referenceNo} onChange={(e) => setTxnForm({ ...txnForm, referenceNo: e.target.value })} />
+                </label>
+                <label className="enterprise-form-group full-width" style={{ gridColumn: 'span 2', minWidth: 0 }}>
+                  <span className="enterprise-label">Remarks / Description</span>
+                  <input className="enterprise-input" type="text" placeholder="Reason for payment/deposit" value={txnForm.description} onChange={(e) => setTxnForm({ ...txnForm, description: e.target.value })} />
+                </label>
+              </div>
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowTxnForm(false)}>Cancel</button>
+                <button type="submit" className="btn-enterprise btn-primary">Post Transaction</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Summary Cards */}
@@ -239,7 +233,21 @@ export default function BankLedger() {
 
       {/* Accounts List & Balance Sheet */}
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Bank Accounts Registry</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Bank Accounts Registry</h2>
+          <div className="table-header-group">
+            {(isAdmin || isAccountant || isClerk) && (
+              <>
+                <button className="btn-enterprise btn-primary" onClick={() => { setShowAccountForm(true); setShowTxnForm(false); }}>
+                  <PlusCircle size={16} /> Open Bank Account
+                </button>
+                <button className="btn-enterprise btn-success" onClick={() => { setShowTxnForm(true); setShowAccountForm(false); }}>
+                  <PlusCircle size={16} /> Post Txn
+                </button>
+              </>
+            )}
+          </div>
+        </div>
         {accounts.length === 0 ? (
           <div className="empty-state">No bank accounts registered yet.</div>
         ) : (
@@ -247,7 +255,6 @@ export default function BankLedger() {
             <table className="enterprise-table">
               <thead>
                 <tr>
-                  <th>Bank Name</th>
                   <th>Account Name</th>
                   <th>Account Number</th>
                   <th>Branch Name</th>
@@ -256,12 +263,14 @@ export default function BankLedger() {
               </thead>
               <tbody>
                 {accounts.map(acc => (
-                  <tr key={acc.id}>
-                    <td>{acc.bankName}</td>
-                    <td>{acc.accountName}</td>
-                    <td>{acc.accountNumber}</td>
-                    <td>{acc.branchName}</td>
-                    <td style={{ fontWeight: 700, color: "var(--primary)" }}>
+                  <tr key={acc.id} className="interactive-row">
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{acc.accountName}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{acc.bankName}</div>
+                    </td>
+                    <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{acc.accountNumber}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{acc.branchName}</td>
+                    <td style={{ fontWeight: 700 }}>
                       ₹{acc.balance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -309,18 +318,21 @@ export default function BankLedger() {
               </thead>
               <tbody>
                 {filteredTransactions.map(t => (
-                  <tr key={t.id}>
-                    <td>{t.transactionNo}</td>
-                    <td>{new Date(t.transactionDate).toLocaleString("en-IN")}</td>
-                    <td>{t.bankAccount?.bankName} ({t.bankAccount?.accountName})</td>
+                  <tr key={t.id} className="interactive-row">
+                    <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{t.transactionNo}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{new Date(t.transactionDate).toLocaleString("en-IN")}</td>
                     <td>
-                      <span style={{ color: t.type === "DEBIT" ? '#059669' : '#dc2626', fontWeight: 700 }}>
-                        {t.type === "DEBIT" ? "DEBIT (DEPOSIT)" : "CREDIT (WITHDRAW)"}
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t.bankAccount?.accountName}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{t.bankAccount?.bankName}</div>
+                    </td>
+                    <td>
+                      <span className={`badge badge-${t.type === "DEBIT" ? "success" : "danger"}`}>
+                        {t.type === "DEBIT" ? "DEBIT" : "CREDIT"}
                       </span>
                     </td>
                     <td style={{ fontWeight: 700 }}>₹{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-                    <td>{t.referenceNo || "N/A"}</td>
-                    <td>{t.description}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{t.referenceNo || "N/A"}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{t.description}</td>
                   </tr>
                 ))}
               </tbody>

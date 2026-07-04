@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Landmark, PlusCircle, RefreshCw, ArrowLeft, Eye } from "lucide-react";
 import API from "../api/axios";
@@ -82,73 +82,78 @@ export default function Shares() {
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Share Capital Ledger</h1>
           <p>Issue society shares, manage share values, and track certificates</p>
         </div>
-        {(isAdmin || isClerk) && (
-          <button className="btn-enterprise btn-primary" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} />
-            Issue Shares
-          </button>
-        )}
       </header>
 
-      {/* Form Overlay */}
+      {/* Form Overlay Modal */}
       {showForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handleIssueShares}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Issue Society Shares</h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Select Member</span>
-                <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
-                  <option value="">-- Choose Member --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
-                  ))}
-                </select>
-              </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleIssueShares}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Issue Society Shares</h3>
               
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">No of Shares</span>
-                <input className="enterprise-input" type="number" value={form.shareCount} onChange={(e) => setForm({ ...form, shareCount: e.target.value })} required />
-              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Select Member</span>
+                  <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
+                    <option value="">-- Choose Member --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
+                    ))}
+                  </select>
+                </label>
+                
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">No of Shares</span>
+                  <input className="enterprise-input" type="number" value={form.shareCount} onChange={(e) => setForm({ ...form, shareCount: e.target.value })} required />
+                </label>
 
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Receipt Number</span>
-                <input className="enterprise-input" name="receiptNo" value={form.receiptNo} onChange={(e) => setForm({ ...form, receiptNo: e.target.value })} required />
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Receipt Number</span>
+                  <input className="enterprise-input" name="receiptNo" value={form.receiptNo} onChange={(e) => setForm({ ...form, receiptNo: e.target.value })} required />
+                </label>
+                
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Transaction Date</span>
+                  <input className="enterprise-input" type="date" value={form.transactionDate} onChange={(e) => setForm({ ...form, transactionDate: e.target.value })} required />
+                </label>
+              </div>
+              
+              <label className="enterprise-form-group full-width" style={{ marginTop: '1.25rem', minWidth: 0 }}>
+                <span className="enterprise-label">Remarks / Certificate Notes</span>
+                <input className="enterprise-input" type="text" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} />
               </label>
               
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Transaction Date</span>
-                <input className="enterprise-input" type="date" value={form.transactionDate} onChange={(e) => setForm({ ...form, transactionDate: e.target.value })} required />
-              </label>
-            </div>
-            
-            <label className="enterprise-form-group full-width" style={{ marginTop: '1.25rem' }}>
-              <span className="enterprise-label">Remarks / Certificate Notes</span>
-              <input className="enterprise-input" type="text" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} />
-            </label>
-            
-            {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
-            {error && <div className="alert alert-danger mt-4">{error}</div>}
-            
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
-                {formLoading ? "Saving..." : "Issue Shares"}
-              </button>
-            </div>
-          </form>
-        </section>
+              {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
+              {error && <div className="alert alert-danger mt-4">{error}</div>}
+              
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
+                  {formLoading ? "Saving..." : "Issue Shares"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Share List */}
       <section>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Shares Log Book</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Shares Log Book</h2>
+          <div className="table-header-group">
+            {(isAdmin || isClerk) && (
+              <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                <PlusCircle size={16} /> Issue Shares
+              </button>
+            )}
+          </div>
+        </div>
         {loading ? (
           <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />

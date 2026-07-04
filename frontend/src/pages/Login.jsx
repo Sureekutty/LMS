@@ -63,10 +63,10 @@ export default function Login() {
           <img src="/lms_logo.svg" alt="LMS Logo" style={{ height: "40px", width: "40px", filter: "drop-shadow(0 2px 8px rgba(56, 189, 248, 0.4))" }} />
           <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0ea5e9", letterSpacing: "-0.02em" }}>LMS</span>
         </div>
-        <div className="nav-links">
-          <button onClick={() => setShowModulesModal(true)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>Modules</button>
-          <button onClick={() => setShowSecurityModal(true)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>Security</button>
-        </div>
+          <div className="nav-links" style={{ background: 'transparent', border: 'none', padding: 0, gap: '12px' }}>
+            <button onClick={() => setShowModulesModal(true)} style={{ background: 'rgba(255, 255, 255, 0.7)', border: '1px solid var(--glass-border)', borderRadius: '999px', padding: '8px 22px', color: '#64748b', cursor: 'pointer', fontWeight: 700, fontSize: '0.92rem', transition: 'all 0.3s ease' }}>Modules</button>
+            <button onClick={() => setShowSecurityModal(true)} style={{ background: 'rgba(255, 255, 255, 0.7)', border: '1px solid var(--glass-border)', borderRadius: '999px', padding: '8px 22px', color: '#64748b', cursor: 'pointer', fontWeight: 700, fontSize: '0.92rem', transition: 'all 0.3s ease' }}>Security</button>
+          </div>
       </nav>
 
       <div className="hero-section">
@@ -224,6 +224,8 @@ export default function Login() {
             </div>
           </div>
         </div>
+      )}
+      
       {/* Modules Modal */}
       {showModulesModal && (
         <div className="modal-overlay" onClick={() => setShowModulesModal(false)}>

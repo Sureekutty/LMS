@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Landmark, ArrowRight, User, Lock, Mail, ShieldAlert } from "lucide-react";
 import api from "../api/axios";
@@ -59,13 +59,12 @@ export default function Register() {
     <main className="register-page">
       <div className="blur-blob blob-1" aria-hidden="true" />
       <div className="blur-blob blob-2" aria-hidden="true" />
+      <div className="blur-blob blob-3" aria-hidden="true" />
 
-      <nav className="navbar">
-        <div className="logo">
-          <div className="logo-box">
-            <Landmark size={20} />
-          </div>
-          <span>LMS</span>
+      <nav className="navbar" aria-label="Main navigation">
+        <div className="logo" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <img src="/lms_logo.svg" alt="LMS Logo" style={{ height: "40px", width: "40px", filter: "drop-shadow(0 2px 8px rgba(56, 189, 248, 0.4))" }} />
+          <span style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0ea5e9", letterSpacing: "-0.02em" }}>LMS</span>
         </div>
       </nav>
 
@@ -77,6 +76,7 @@ export default function Register() {
           <form onSubmit={handleRegister} className="register-form">
             <div className="input-row">
               <label className="input-group">
+                <User size={18} className="input-icon" />
                 <input
                   type="text"
                   placeholder="First Name"
@@ -87,6 +87,7 @@ export default function Register() {
               </label>
 
               <label className="input-group">
+                <User size={18} className="input-icon" />
                 <input
                   type="text"
                   placeholder="Last Name"
@@ -98,6 +99,7 @@ export default function Register() {
             </div>
 
             <label className="input-group">
+              <User size={18} className="input-icon" />
               <input
                 type="text"
                 placeholder="Display Name"

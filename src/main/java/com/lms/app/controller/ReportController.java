@@ -23,7 +23,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/members/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadMembersCsv() {
         ByteArrayInputStream in = reportService.exportMembersToCsv();
         HttpHeaders headers = new HttpHeaders();
@@ -36,7 +36,7 @@ public class ReportController {
     }
 
     @GetMapping("/transactions/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadTransactionsCsv() {
         ByteArrayInputStream in = reportService.exportTransactionsToCsv();
         HttpHeaders headers = new HttpHeaders();
@@ -49,7 +49,7 @@ public class ReportController {
     }
 
     @GetMapping("/loans/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadLoansCsv() {
         ByteArrayInputStream in = reportService.exportLoansToCsv();
         HttpHeaders headers = new HttpHeaders();

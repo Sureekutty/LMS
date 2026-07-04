@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldAlert, RefreshCw, User, Search, Calendar, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
@@ -63,54 +63,50 @@ export default function Audits() {
       <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
-      <header className="page-header">
+
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Security Audit Logs</h1>
           <p>Trace operational events, administrative logins, and data modifications</p>
         </div>
-        <button className="btn-enterprise btn-primary" onClick={fetchLogs}>
-          <RefreshCw size={18} />
-          Refresh Trails
-        </button>
       </header>
-
-      {/* Filter Toolbar */}
-      <section className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <form onSubmit={handleFilterSearch} style={{ display: 'flex', gap: '1rem', flex: '1 1 auto', alignItems: 'center' }}>
-          <div className="enterprise-form-group" style={{ flex: 1, margin: 0, position: 'relative' }}>
-            <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>
-              <User size={18} />
-            </div>
-            <input 
-              className="enterprise-input"
-              type="text" 
-              placeholder="Filter by Username..." 
-              value={searchUser} 
-              onChange={(e) => setSearchUser(e.target.value)} 
-              style={{ paddingLeft: '2.75rem', margin: 0 }}
-            />
-          </div>
-          <button type="submit" className="btn-enterprise btn-secondary" style={{ margin: 0 }}>Filter User</button>
-        </form>
-
-        <div className="enterprise-form-group" style={{ flex: '2 1 auto', margin: 0, position: 'relative' }}>
-          <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>
-            <Search size={18} />
-          </div>
-          <input 
-            className="enterprise-input"
-            type="text" 
-            placeholder="Search descriptions / actions / IPs..." 
-            value={searchKeyword} 
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            style={{ paddingLeft: '2.75rem', margin: 0 }}
-          />
-        </div>
-      </section>
 
       {/* Logs Table */}
       <section>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Auditing Trail Logs</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Auditing Trail Logs</h2>
+          
+          <div className="members-header-actions" style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
+            <form onSubmit={handleFilterSearch} className="search-bar-wrapper" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <User size={18} color="#94a3b8" />
+              <input 
+                type="text" 
+                placeholder="Filter by User..." 
+                value={searchUser} 
+                onChange={(e) => setSearchUser(e.target.value)} 
+                style={{ border: 'none', outline: 'none', background: 'transparent', width: '130px', padding: 0 }}
+              />
+              <button type="submit" className="btn-enterprise btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px' }}>Filter</button>
+            </form>
+
+            <div className="search-bar-wrapper">
+              <Search size={18} color="#94a3b8" />
+              <input 
+                type="text" 
+                placeholder="Search descriptions / actions / IPs..." 
+                value={searchKeyword} 
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+            </div>
+
+            <div className="table-header-group">
+              <button className="btn-enterprise btn-primary" onClick={fetchLogs}>
+                <RefreshCw size={16} /> Refresh Trails
+              </button>
+            </div>
+          </div>
+        </div>
+
         {error ? (
           <div className="empty-state" style={{ color: 'var(--danger)', borderColor: '#fecaca', backgroundColor: '#fef2f2' }}>
             <ShieldAlert size={36} />

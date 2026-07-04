@@ -140,6 +140,21 @@ export default function Loans() {
     }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const res = await API.get(`/reports/loans/csv`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `loans_report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      alert("Failed to download CSV report.");
+    }
+  };
+
   const handleReplaceSurety = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -241,7 +256,7 @@ export default function Loans() {
           <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Credit Management
           </span>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>Loans & EMI Ledger</h1>
+          <h1 className="gradient-heading">Loans & EMI Ledger</h1>
         </div>
       </div>
 
@@ -257,7 +272,7 @@ export default function Loans() {
         </div>
         
         <div className="table-header-group">
-          <button className="btn-enterprise btn-secondary" onClick={() => alert("Exporting to Excel...")}>
+          <button className="btn-enterprise btn-secondary" onClick={handleExportCsv}>
             <FileSpreadsheet size={16} /> Export CSV
           </button>
           {(isAdmin || isClerk || isMember) && (
@@ -336,7 +351,7 @@ export default function Loans() {
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: "8px", alignItems: 'center' }}>
-                        <button className="btn-enterprise btn-secondary" onClick={() => setSelectedLoan(l)} style={{ padding: '0.4rem 0.6rem' }}>
+                        <button className="btn-enterprise btn-secondary" onClick={() => navigate('/loans/' + l.id)} style={{ padding: '0.4rem 0.6rem' }}>
                           Inspect
                         </button>
                         

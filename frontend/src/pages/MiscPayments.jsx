@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, PlusCircle, RefreshCw, FileText, ArrowUpRight, ArrowDownLeft, Calendar, Tag } from "lucide-react";
 import API from "../api/axios";
@@ -81,17 +81,11 @@ export default function MiscPayments() {
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Miscellaneous Vouchers (Income & Expenses)</h1>
           <p>Register one-off office expenses, Admission fees, Welfare fund payouts, or Penalties.</p>
         </div>
-        {(isAdmin || isAccountant || isClerk) && (
-          <button className="btn-enterprise btn-primary" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} />
-            Post Misc Voucher
-          </button>
-        )}
       </header>
 
       {error && <div className="alert alert-danger" style={{ marginBottom: 15 }}>{error}</div>}
@@ -100,97 +94,99 @@ export default function MiscPayments() {
 
       {/* Post Payment Form Modal */}
       {showForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handlePostPayment}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Post Miscellaneous Income or Expense Voucher</h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Voucher Type</span>
-                <select
-                  className="enterprise-select"
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  required
-                >
-                  <option value="EXPENSE">Expense (Outward Payment)</option>
-                  <option value="INCOME">Income (Inward Receipt)</option>
-                </select>
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Voucher Category</span>
-                <select
-                  className="enterprise-select"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  required
-                >
-                  <option value="ADMISSION_FEE">Admission Fee (Income)</option>
-                  <option value="PENALTY">Late Penalty / Fine (Income)</option>
-                  <option value="WELFARE_FUND">Welfare Fund (Expense/Receipt)</option>
-                  <option value="OFFICE_EXPENSE">Office Maintenance (Expense)</option>
-                  <option value="STATIONERY">Stationery & Print (Expense)</option>
-                  <option value="OTHER">Other Custom</option>
-                </select>
-              </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handlePostPayment}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Post Miscellaneous Income or Expense Voucher</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Voucher Type</span>
+                  <select
+                    className="enterprise-select"
+                    value={form.type}
+                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+                    required
+                  >
+                    <option value="EXPENSE">Expense (Outward Payment)</option>
+                    <option value="INCOME">Income (Inward Receipt)</option>
+                  </select>
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Voucher Category</span>
+                  <select
+                    className="enterprise-select"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    required
+                  >
+                    <option value="ADMISSION_FEE">Admission Fee (Income)</option>
+                    <option value="PENALTY">Late Penalty / Fine (Income)</option>
+                    <option value="WELFARE_FUND">Welfare Fund (Expense/Receipt)</option>
+                    <option value="OFFICE_EXPENSE">Office Maintenance (Expense)</option>
+                    <option value="STATIONERY">Stationery & Print (Expense)</option>
+                    <option value="OTHER">Other Custom</option>
+                  </select>
+                </label>
 
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Amount (₹)</span>
-                <input
-                  className="enterprise-input"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  required
-                />
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Payment Mode</span>
-                <select
-                  className="enterprise-select"
-                  value={form.paymentMode}
-                  onChange={(e) => setForm({ ...form, paymentMode: e.target.value })}
-                  required
-                >
-                  <option value="CASH">Cash Drawer</option>
-                  <option value="BANK">Bank Transfer</option>
-                </select>
-              </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Amount (,1)</span>
+                  <input
+                    className="enterprise-input"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    required
+                  />
+                </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Payment Mode</span>
+                  <select
+                    className="enterprise-select"
+                    value={form.paymentMode}
+                    onChange={(e) => setForm({ ...form, paymentMode: e.target.value })}
+                    required
+                  >
+                    <option value="CASH">Cash Drawer</option>
+                    <option value="BANK">Bank Transfer</option>
+                  </select>
+                </label>
 
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Link Member (Optional)</span>
-                <select
-                  className="enterprise-select"
-                  value={form.memberId}
-                  onChange={(e) => setForm({ ...form, memberId: e.target.value })}
-                >
-                  <option value="">-- No Linked Member --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
-                  ))}
-                </select>
-              </label>
-              <label className="enterprise-form-group">
-                <span className="enterprise-label">Description / Purpose Details</span>
-                <input
-                  className="enterprise-input"
-                  type="text"
-                  placeholder="e.g. Purchased admission notebooks"
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  required
-                />
-              </label>
-            </div>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Link Member (Optional)</span>
+                  <select
+                    className="enterprise-select"
+                    value={form.memberId}
+                    onChange={(e) => setForm({ ...form, memberId: e.target.value })}
+                  >
+                    <option value="">-- No Linked Member --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Description / Purpose Details</span>
+                  <input
+                    className="enterprise-input"
+                    type="text"
+                    placeholder="e.g. Purchased admission notebooks"
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    required
+                  />
+                </label>
+              </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" className="btn-enterprise btn-primary">Post Voucher</button>
-            </div>
-          </form>
-        </section>
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-enterprise btn-primary">Post Voucher</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Summary Cards */}
@@ -217,7 +213,16 @@ export default function MiscPayments() {
 
       {/* Table grid of payments */}
       <section>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Miscellaneous Vouchers Registry</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Miscellaneous Vouchers Registry</h2>
+          <div className="table-header-group">
+            {(isAdmin || isAccountant || isClerk) && (
+              <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                <PlusCircle size={16} /> Post Misc Voucher
+              </button>
+            )}
+          </div>
+        </div>
         {loading ? (
           <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />

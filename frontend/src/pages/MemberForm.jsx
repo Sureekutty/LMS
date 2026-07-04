@@ -138,7 +138,7 @@ export default function MemberForm() {
       {/* Premium Title Box */}
       <div style={{ background: 'white', padding: '2rem 2.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{isEditing ? "Edit Member Profile" : "Enroll New Member"}</h1>
+          <h1 className="gradient-heading" style={{ margin: 0, letterSpacing: '-0.5px' }}>{isEditing ? "Edit Member Profile" : "Enroll New Member"}</h1>
           <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', fontSize: '1rem' }}>{isEditing ? `Updating comprehensive records for ${form.name || ''}` : "Register a new society member and set up their accounts"}</p>
         </div>
         <div style={{ background: '#f0f9ff', padding: '1.25rem', borderRadius: '50%', border: '1px solid #e0f2fe' }}>

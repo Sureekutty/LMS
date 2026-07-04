@@ -48,7 +48,7 @@ export default function Dashboard() {
   };
 
   const [stats, setStats] = useState({
-    totalMembers: 0, totalShareCapital: 0, totalDeposits: 0, activeLoans: 0, thriftDeposit: 0, outstandingLoansAmount: 0, totalTransactions: 0
+    totalMembers: 0, totalShareCapital: 0, totalDeposits: 0, activeLoans: 0, activeDeposits: 0, thriftDeposit: 0, outstandingLoansAmount: 0, totalTransactions: 0
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +69,10 @@ export default function Dashboard() {
         const totalShareCapital = members.reduce((sum, m) => sum + (m.shareCapital || 0), 0);
         const totalDeposits = deposits.reduce((sum, d) => sum + (d.principalAmount || 0), 0);
         const activeLoansCount = loans.filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED")).length;
+        const activeDepositsCount = deposits.filter(d => d.status && d.status.toUpperCase() === "ACTIVE").length || deposits.length;
 
         setStats({
-          totalMembers: members.length, totalShareCapital, totalDeposits, activeLoans: activeLoansCount, thriftDeposit: 0, outstandingLoansAmount: 0, totalTransactions: txns.length
+          totalMembers: members.length, totalShareCapital, totalDeposits, activeLoans: activeLoansCount, activeDeposits: activeDepositsCount, thriftDeposit: 0, outstandingLoansAmount: 0, totalTransactions: txns.length
         });
 
         const sortedTxns = txns.sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
@@ -94,9 +95,10 @@ export default function Dashboard() {
             .reduce((sum, l) => sum + (l.outstandingPrincipal || 0) + (l.outstandingInterest || 0), 0);
 
           const totalDeposits = deposits.reduce((sum, d) => sum + (d.principalAmount || 0), 0);
+          const activeDepositsCount = deposits.filter(d => d.status && d.status.toUpperCase() === "ACTIVE").length || deposits.length;
 
           setStats({
-            totalMembers: 0, totalShareCapital: member.shareCapital || 0, thriftDeposit: member.thriftDeposit || 0, totalDeposits,
+            totalMembers: 0, totalShareCapital: member.shareCapital || 0, thriftDeposit: member.thriftDeposit || 0, totalDeposits, activeDeposits: activeDepositsCount,
             activeLoans: loans.filter(l => l.status && (l.status.toUpperCase() === "ACTIVE" || l.status.toUpperCase() === "APPROVED")).length, outstandingLoansAmount, totalTransactions: txns.length
           });
 
@@ -237,8 +239,8 @@ export default function Dashboard() {
                 <>
                   <div className="dashboard-card stat-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                      <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#e0f2fe', color: '#0ea5e9' }}>
-                        <Users size={26} />
+                      <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: 'white', boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)' }}>
+                        <Users size={24} />
                       </div>
                       <MoreVertical size={18} style={{ color: '#94a3b8', cursor: 'pointer' }} />
                     </div>
@@ -251,7 +253,7 @@ export default function Dashboard() {
 
                   <div className="dashboard-card stat-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                      <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#dcfce7', color: '#10b981' }}>
+                      <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
                         <Landmark size={26} />
                       </div>
                       <MoreVertical size={18} style={{ color: '#94a3b8', cursor: 'pointer' }} />
@@ -265,7 +267,7 @@ export default function Dashboard() {
 
                   <div className="dashboard-card stat-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                      <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#fef3c7', color: '#f59e0b' }}>
+                      <div className="stat-icon-wrap" style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', color: 'white', boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)' }}>
                         <CreditCard size={26} />
                       </div>
                       <MoreVertical size={18} style={{ color: '#94a3b8', cursor: 'pointer' }} />
@@ -273,13 +275,14 @@ export default function Dashboard() {
                     <div>
                       <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Total Deposits</h4>
                       <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.totalDeposits.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{stats.activeDeposits} Active Accounts</div>
                     </div>
                     <div className="stat-trend neutral" style={{ marginTop: 'auto' }}><ArrowRight size={14} /> 0% from last month</div>
                   </div>
 
                   <div className="dashboard-card stat-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                      <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#fee2e2', color: '#ef4444' }}>
+                      <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)' }}>
                         <FileText size={26} />
                       </div>
                       <MoreVertical size={18} style={{ color: '#94a3b8', cursor: 'pointer' }} />
@@ -294,7 +297,7 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                    <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#e0f2fe', color: '#0ea5e9' }}>
+                    <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: 'white', boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)' }}>
                       <Users size={26} />
                     </div>
                     <div>
@@ -304,7 +307,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                    <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#dcfce7', color: '#10b981' }}>
+                    <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
                       <Landmark size={26} />
                     </div>
                     <div>
@@ -314,17 +317,18 @@ export default function Dashboard() {
                   </div>
 
                   <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                    <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#fef3c7', color: '#f59e0b' }}>
+                    <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white', boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)' }}>
                       <CreditCard size={26} />
                     </div>
                     <div>
                       <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>My Active Deposits</h4>
                       <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.totalDeposits.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{stats.activeDeposits} Active Accounts</div>
                     </div>
                   </div>
 
                   <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                    <div style={{ padding: '0.8rem', borderRadius: '14px', backgroundColor: '#fee2e2', color: '#ef4444' }}>
+                    <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)' }}>
                       <FileText size={26} />
                     </div>
                     <div>
@@ -392,9 +396,8 @@ export default function Dashboard() {
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FileText size={18} style={{ color: 'var(--primary)' }} /> Recent Ledger Activity
                   </h3>
-                  <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px' }}>View All</button>
+                  <button className="btn-enterprise btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>View All</button>
                 </div>
-                
                 {recentTransactions.length === 0 ? (
                   <div className="empty-state" style={{ flex: 1 }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>No transactions recorded.</h3>

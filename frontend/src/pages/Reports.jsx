@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Landmark, FileText, Download, Users, Landmark as BankIcon, CreditCard, RefreshCw, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
@@ -79,16 +79,34 @@ export default function Reports() {
     fetchStats();
   }, []);
 
-  const handleDownloadCsv = (type) => {
-    const token = localStorage.getItem("token");
-    const url = `${API.defaults.baseURL}/reports/${type}/csv`;
-    window.open(`${url}?token=${token}`, "_blank");
+  const handleDownloadCsv = async (type) => {
+    try {
+      const res = await API.get(`/reports/${type}/csv`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${type}_report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      alert("Failed to download CSV report.");
+    }
   };
 
-  const handleDownloadPdf = (type) => {
-    const token = localStorage.getItem("token");
-    const url = `${API.defaults.baseURL}/reports/${type}/pdf`;
-    window.open(`${url}?token=${token}`, "_blank");
+  const handleDownloadPdf = async (type) => {
+    try {
+      const res = await API.get(`/reports/${type}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${type}_report.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      alert("Failed to download PDF report.");
+    }
   };
 
   return (
@@ -96,15 +114,11 @@ export default function Reports() {
       <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Financial Reports & Ledger Book</h1>
           <p>Download system ledgers, compile cash books, and run balance sheets</p>
         </div>
-        <button className="btn-enterprise btn-primary" onClick={fetchStats}>
-          <RefreshCw size={18} />
-          Recalculate Balances
-        </button>
       </header>
 
       {loading ? (
@@ -115,44 +129,55 @@ export default function Reports() {
       ) : (
         <>
           {/* Summary Cards */}
-          <section className="dashboard-stats" style={{ marginBottom: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
-                <Users size={28} />
-              </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Total Active Members</h4>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalMembers}</h2>
-              </div>
-            </div>
-
-            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#dcfce7', color: '#15803d' }}>
-                <BankIcon size={28} />
-              </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Share Capital Pool</h4>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.totalShareCapital.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+          <section style={{ marginBottom: 30 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Financial Summary Metrics</h2>
+              <div className="table-header-group">
+                <button className="btn-enterprise btn-primary" onClick={fetchStats}>
+                  <RefreshCw size={16} /> Recalculate Balances
+                </button>
               </div>
             </div>
 
-            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#fef3c7', color: '#b45309' }}>
-                <CreditCard size={28} />
+            <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+              <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: 'white', boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)' }}>
+                  <Users size={26} />
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Total Active Members</h4>
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalMembers}</h2>
+                </div>
               </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Outstanding Credit (Loans)</h4>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.outstandingLoansAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
-              </div>
-            </div>
 
-            <div className="glass-card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem' }}>
-              <div style={{ padding: '1rem', borderRadius: 'var(--radius-full)', backgroundColor: '#fee2e2', color: '#b91c1c' }}>
-                <Landmark size={28} />
+              <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
+                  <BankIcon size={26} />
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Share Capital Pool</h4>
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.totalShareCapital.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                </div>
               </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Cash Book Balance</h4>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.cashBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+
+              <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white', boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)' }}>
+                  <CreditCard size={26} />
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Outstanding Credit (Loans)</h4>
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.outstandingLoansAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                </div>
+              </div>
+
+              <div className="glass-card stat-card" style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', padding: '1.5rem', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)' }}>
+                  <Landmark size={26} />
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Cash Book Balance</h4>
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{stats.cashBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</h2>
+                </div>
               </div>
             </div>
           </section>

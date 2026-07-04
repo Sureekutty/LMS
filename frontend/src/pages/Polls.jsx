@@ -86,61 +86,67 @@ export default function Polls() {
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
           <h1 className="gradient-heading">Society Polls</h1>
           <p>Vote on important society decisions and elections</p>
         </div>
-        {(isAdmin || isClerk) && (
-          <button className="btn-enterprise btn-primary" onClick={() => setShowForm(!showForm)}>
-            <ListPlus size={18} />
-            Create Poll
-          </button>
-        )}
       </header>
 
       {showForm && (
-        <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-          <form onSubmit={handleCreatePoll}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Create New Poll</h3>
-            
-            <label className="enterprise-form-group full-width">
-              <span className="enterprise-label">Poll Title</span>
-              <input className="enterprise-input" value={formTitle} onChange={e => setFormTitle(e.target.value)} required />
-            </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleCreatePoll}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Create New Poll</h3>
+              
+              <label className="enterprise-form-group full-width">
+                <span className="enterprise-label">Poll Title</span>
+                <input className="enterprise-input" value={formTitle} onChange={e => setFormTitle(e.target.value)} required />
+              </label>
 
-            <label className="enterprise-form-group full-width">
-              <span className="enterprise-label">Description (Optional)</span>
-              <textarea className="enterprise-input" rows="3" value={formDesc} onChange={e => setFormDesc(e.target.value)} />
-            </label>
+              <label className="enterprise-form-group full-width">
+                <span className="enterprise-label">Description (Optional)</span>
+                <textarea className="enterprise-input" rows="3" value={formDesc} onChange={e => setFormDesc(e.target.value)} />
+              </label>
 
-            <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-              <span className="enterprise-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Poll Options</span>
-              {formOptions.map((opt, i) => (
-                <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <input 
-                    className="enterprise-input" 
-                    placeholder={`Option ${i + 1}`}
-                    value={opt} 
-                    onChange={e => handleOptionChange(i, e.target.value)} 
-                    style={{ margin: 0 }}
-                  />
-                </div>
-              ))}
-              <button type="button" className="btn-enterprise btn-secondary" onClick={handleAddOption} style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                + Add Option
-              </button>
-            </div>
+              <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
+                <span className="enterprise-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Poll Options</span>
+                {formOptions.map((opt, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <input 
+                      className="enterprise-input" 
+                      placeholder={`Option ${i + 1}`}
+                      value={opt} 
+                      onChange={e => handleOptionChange(i, e.target.value)} 
+                      style={{ margin: 0 }}
+                    />
+                  </div>
+                ))}
+                <button type="button" className="btn-enterprise btn-secondary" onClick={handleAddOption} style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                  + Add Option
+                </button>
+              </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
-              <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" className="btn-enterprise btn-primary">Publish Poll</button>
-            </div>
-          </form>
-        </section>
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-enterprise btn-primary">Publish Poll</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       <section>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Active Polls</h2>
+          <div className="table-header-group">
+            {(isAdmin || isClerk) && (
+              <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                <ListPlus size={16} /> Create Poll
+              </button>
+            )}
+          </div>
+        </div>
         {loading ? (
           <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />

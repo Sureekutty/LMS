@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Landmark, Users, CreditCard, LogOut, Home, Settings, Bell, 
-  ShieldAlert, FileText, Search, Sun, Moon, ChevronRight, UserPlus 
+  ShieldAlert, FileText, Search, Sun, Moon, ChevronRight, UserPlus, Zap
 } from 'lucide-react';
 import api from '../api/axios';
 import ProfileModal from './ProfileModal';
@@ -58,13 +58,20 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    const currentTheme = theme === 'dark' ? 'light' : theme;
+    document.body.classList.remove('thunder-theme');
+    if (currentTheme === 'thunder') {
+      document.body.classList.add('thunder-theme');
     }
+    localStorage.setItem('theme', currentTheme);
+  }, [theme]);
+
+  const cycleTheme = () => {
+    if (theme === 'light' || theme === 'dark') setTheme('thunder');
+    else setTheme('light');
   };
   
   const [username, setUsername] = useState(localStorage.getItem("username") || "Admin");
@@ -178,45 +185,36 @@ export default function Layout({ children }) {
           </button>
         </nav>
 
-        <div className="ai-assistant-card" style={{ marginTop: '2rem' }}>
-          <h4>Need Help?</h4>
-          <h4>LMS AI Assistant</h4>
-          <p>Ask me anything about your loans, deposits, or members.</p>
-          <button 
-            className="btn-enterprise btn-primary" 
-            style={{ width: '100%', marginTop: '0.75rem', fontSize: '0.8rem', padding: '0.5rem' }}
-            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
-          >
-            Open Chat
-          </button>
-          <div style={{ position: 'absolute', right: '-15px', bottom: '-15px', opacity: 0.3, transform: 'rotate(-15deg)' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="10" rx="2" />
-              <circle cx="12" cy="5" r="2" />
-              <path d="M12 7v4" />
-            </svg>
+          <div style={{ marginTop: 'auto', padding: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+            <button 
+              className="btn-enterprise btn-secondary" 
+              style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /></svg>
+              Ask AI Assistant
+            </button>
           </div>
-        </div>
       </aside>
 
       <div className="main-wrapper">
         {/* Global Topbar */}
         <header className="global-topbar">
-          <div className="page-title-group">
+          <div className="page-title-group" style={{ flexShrink: 0 }}>
             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Good Morning, {username}! 👋</span>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>LMS Enterprise</h1>
           </div>
           
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <div className="topbar-search">
-              <Search size={16} color="#94a3b8" />
-              <input ref={searchInputRef} type="text" placeholder="Search anything..." />
-              <kbd>Ctrl+K</kbd>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginLeft: '0.5rem' }}>
-              <button className="icon-btn" onClick={toggleTheme} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
+          <div className="topbar-search" style={{ flex: 1, maxWidth: '500px', margin: '0 2rem' }}>
+            <Search size={16} color="#94a3b8" />
+            <input ref={searchInputRef} type="text" placeholder="Search anything..." style={{ width: '100%' }} />
+            <kbd>Ctrl+K</kbd>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
+              <button className="icon-btn" onClick={cycleTheme} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }} title="Toggle Theme (Light / Thunder)">
+                {(theme === 'light' || theme === 'dark') && <Sun size={20} />}
+                {theme === 'thunder' && <Zap size={20} style={{ color: '#f59e0b', fill: '#f59e0b' }} />}
               </button>
               
               <div style={{ position: 'relative' }}>
@@ -247,6 +245,14 @@ export default function Layout({ children }) {
                             style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
                             onMouseOver={(e) => e.currentTarget.style.background = 'var(--border-light)'}
                             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              if (n.title.toLowerCase().includes('loan')) navigate('/loans');
+                              else if (n.title.toLowerCase().includes('member')) navigate('/members');
+                              else if (n.title.toLowerCase().includes('deposit')) navigate('/deposits');
+                              else if (n.title.toLowerCase().includes('share')) navigate('/shares');
+                              else navigate('/dashboard');
+                            }}
                           >
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', marginTop: '6px', flexShrink: 0 }}></div>
                             <div>
@@ -299,7 +305,6 @@ export default function Layout({ children }) {
                 )}
               </div>
             </div>
-          </div>
         </header>
 
         {/* Dynamic Page Content */}

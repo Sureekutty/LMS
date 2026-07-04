@@ -47,6 +47,7 @@ public class UserController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse(false, e.getMessage()));
+        }
     }
 
     // Upload profile photo
