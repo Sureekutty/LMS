@@ -49,6 +49,28 @@ public class LoanService {
         return loanRepository.findByStatus(status);
     }
 
+    @Transactional
+    public Loan replaceSurety(Long loanId, int suretyIndex, String newSurety) {
+        Loan loan = loanRepository.findById(loanId)
+            .orElseThrow(() -> new RuntimeException("Loan not found"));
+        
+        switch (suretyIndex) {
+            case 1:
+                loan.setSurety1(newSurety);
+                break;
+            case 2:
+                loan.setSurety2(newSurety);
+                break;
+            case 3:
+                loan.setSurety3(newSurety);
+                break;
+            default:
+                throw new RuntimeException("Invalid surety index. Must be 1, 2, or 3");
+        }
+        
+        return loanRepository.save(loan);
+    }
+
     // Get loans by member
     public List<Loan> getLoansByMember(Member member) {
         return loanRepository.findByMember(member);

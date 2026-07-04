@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Thin outer circular boundary in light sky blue -->
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#38bdf8" stroke-width="3.5" />
+
+  <!-- Left building bar -->
+  <path d="M37 59 L37 49 L43 42 L43 59 Z" fill="#38bdf8" />
+  
+  <!-- Center building peak (Left part) -->
+  <path d="M45 59 L45 32 L50 24 L50 59 Z" fill="#0ea5e9" />
+  
+  <!-- Center building peak (Right part) -->
+  <path d="M50 59 L50 24 L55 32 L55 59 Z" fill="#7dd3fc" />
+  
+  <!-- Right building bar -->
+  <path d="M57 59 L57 42 L63 49 L63 59 Z" fill="#93c5fd" />
+
+  <!-- Text "LMS" at the bottom -->
+  <text x="50" y="76" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="16" fill="#38bdf8" text-anchor="middle" letter-spacing="0.5">LMS</text>
+</svg>

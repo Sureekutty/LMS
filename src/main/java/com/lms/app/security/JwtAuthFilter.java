@@ -28,7 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Get token from header
+        // Get token from header or query param
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
@@ -36,6 +36,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Check if header starts with "Bearer "
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+        }
+        
+        // If not found in header, check query parameter (for file downloads)
+        if (token == null && request.getParameter("token") != null) {
+            token = request.getParameter("token");
+        }
+
+        if (token != null) {
             try {
                 username = jwtUtils.getUsernameFromToken(token);
             } catch (Exception e) {

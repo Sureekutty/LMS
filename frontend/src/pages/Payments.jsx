@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, PlusCircle, RefreshCw, XCircle, ArrowDownCircle, ArrowUpCircle, ArrowLeft } from "lucide-react";
+import { Landmark, PlusCircle, RefreshCw, XCircle, ArrowLeft } from "lucide-react";
 import API from "../api/axios";
 import "./Payments.css";
 
@@ -109,115 +109,114 @@ export default function Payments() {
   };
 
   return (
-    <main className="payments-page">
-      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
-        <div>
-          <h1>Payments & Receipts Ledger</h1>
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Payments & Receipts Ledger</h1>
           <p>Post financial vouchers, receipt cash deposits, and balance books</p>
         </div>
-        {(isAdmin || isClerk || isAccountant) && (
-          <button className="open-form-btn" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} />
-            Post Voucher Entry
-          </button>
-        )}
       </header>
 
-      {/* Post Voucher Entry Form */}
+      {/* Post Voucher Entry Form Modal */}
       {showForm && (
-        <section className="deposit-form-wrapper">
-          <form onSubmit={handlePostVoucher} className="deposit-form">
-            <h3>Post Voucher Entry (Double-Entry Debit/Credit)</h3>
-            
-            <div className="form-row">
-              <label>
-                <span>Voucher Category</span>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} required>
-                  <option value="DEBIT">Debit (Receipt - Increases Cash)</option>
-                  <option value="CREDIT">Credit (Payment - Decreases Cash)</option>
-                </select>
-              </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handlePostVoucher}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Post Voucher Entry (Double-Entry Debit/Credit)</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Voucher Category</span>
+                  <select className="enterprise-select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} required>
+                    <option value="DEBIT">Debit (Receipt - Increases Cash)</option>
+                    <option value="CREDIT">Credit (Payment - Decreases Cash)</option>
+                  </select>
+                </label>
 
-              <label>
-                <span>Transaction Type</span>
-                <select value={form.transactionTypeId} onChange={(e) => setForm({ ...form, transactionTypeId: e.target.value })} required>
-                  <option value="">-- Choose Type --</option>
-                  {transactionTypes.map(t => (
-                    <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
-                  ))}
-                  {/* Fallbacks if Types list is empty */}
-                  {transactionTypes.length === 0 && (
-                    <>
-                      <option value="1">Share Capital Deposit</option>
-                      <option value="2">Loan Disbursal / Repayment</option>
-                    </>
-                  )}
-                </select>
-              </label>
-            </div>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Transaction Type</span>
+                  <select className="enterprise-select" value={form.transactionTypeId} onChange={(e) => setForm({ ...form, transactionTypeId: e.target.value })} required>
+                    <option value="">-- Choose Type --</option>
+                    {transactionTypes.map(t => (
+                      <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
+                    ))}
+                    {transactionTypes.length === 0 && (
+                      <>
+                        <option value="1">Share Capital Deposit</option>
+                        <option value="2">Loan Disbursal / Repayment</option>
+                      </>
+                    )}
+                  </select>
+                </label>
 
-            <div className="form-row">
-              <label>
-                <span>Linked Member (Optional)</span>
-                <select value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })}>
-                  <option value="">-- No Member Linked --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
-                  ))}
-                </select>
-              </label>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Linked Member (Optional)</span>
+                  <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })}>
+                    <option value="">-- No Member Linked --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
+                    ))}
+                  </select>
+                </label>
 
-              <label>
-                <span>Voucher Amount (₹)</span>
-                <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
-              </label>
-            </div>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Voucher Amount (,1)</span>
+                  <input className="enterprise-input" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+                </label>
 
-            <div className="form-row">
-              <label>
-                <span>Reference / Instrument No</span>
-                <input type="text" placeholder="Chq No, Cash Slp..." value={form.referenceNo} onChange={(e) => setForm({ ...form, referenceNo: e.target.value })} />
-              </label>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Reference / Instrument No</span>
+                  <input className="enterprise-input" type="text" placeholder="Chq No, Cash Slp..." value={form.referenceNo} onChange={(e) => setForm({ ...form, referenceNo: e.target.value })} />
+                </label>
 
-              <label>
-                <span>Narrative / Description</span>
-                <input type="text" placeholder="Narration..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
-              </label>
-            </div>
+                <label className="enterprise-form-group">
+                  <span className="enterprise-label">Narrative / Description</span>
+                  <input className="enterprise-input" type="text" placeholder="Narration..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+                </label>
+              </div>
 
-            {formSuccess && <div className="form-success-msg">{formSuccess}</div>}
-            {error && <div className="form-error-msg">{error}</div>}
+              {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
+              {error && <div className="alert alert-danger mt-4">{error}</div>}
 
-            <div className="form-actions">
-              <button type="submit" disabled={formLoading} className="submit-btn">
-                {formLoading ? "Posting..." : "Post Voucher"}
-              </button>
-              <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
-            </div>
-          </form>
-        </section>
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
+                  {formLoading ? "Posting..." : "Post Voucher"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Ledger list */}
-      <section className="deposits-list">
-        <h2>System Transaction Vouchers</h2>
+      <section>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>System Transaction Vouchers</h2>
+          <div className="table-header-group">
+            {(isAdmin || isClerk || isAccountant) && (
+              <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                <PlusCircle size={16} /> Post Voucher Entry
+              </button>
+            )}
+          </div>
+        </div>
         {loading ? (
-          <div className="loading-state">
+          <div className="empty-state">
             <RefreshCw size={28} className="spin-icon" />
-            <p>Fetching transaction records...</p>
+            <p style={{ marginTop: '1rem' }}>Fetching transaction records...</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="empty-state">
             <Landmark size={36} />
-            <p>No transactions registered in this ledger period.</p>
-          </div>
-        ) : (
-          <div className="table-wrap">
-            <table className="deposits-table">
+            <p style={{ marginTop: '1rem' }}>No transactions registered in this ledger period.</p>
+          </div>        ) : (
+          <div className="table-wrapper">
+            <table className="enterprise-table">
               <thead>
                 <tr>
                   <th>Voucher No</th>
@@ -226,39 +225,40 @@ export default function Payments() {
                   <th>Txn Type</th>
                   <th>Debit (Dr)</th>
                   <th>Credit (Cr)</th>
-                  <th>Reference</th>
-                  <th>Status</th>
+                  <th>Reference & Status</th>
                   {(isAdmin || isAccountant) && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {transactions.map(t => (
                   <tr key={t.id}>
-                    <td>{t.transactionNo}</td>
+                    <td><strong>{t.transactionNo}</strong></td>
                     <td>{new Date(t.transactionDate).toLocaleDateString("en-IN")}</td>
                     <td>{t.member?.name || "Suspense Ledger"}</td>
                     <td>{t.transactionType?.typeName || "Voucher Entry"}</td>
                     <td>
                       {t.type === "DEBIT" ? (
-                        <span className="dr-val">₹{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                        <span style={{ color: '#059669', fontWeight: '700' }}>₹{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       ) : "-"}
                     </td>
                     <td>
                       {t.type === "CREDIT" ? (
-                        <span className="cr-val">₹{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                        <span style={{ color: '#dc2626', fontWeight: '700' }}>₹{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       ) : "-"}
                     </td>
-                    <td>{t.referenceNo || "N/A"}</td>
                     <td>
-                      <span className={`status-badge ${t.status?.toLowerCase()}`}>
-                        {t.status}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{t.referenceNo || "N/A"}</span>
+                        <span className={`badge badge-${t.status === 'ACTIVE' ? 'success' : t.status === 'REVERSED' ? 'warning' : 'secondary'}`} style={{ alignSelf: 'flex-start', padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>
+                          {t.status}
+                        </span>
+                      </div>
                     </td>
                     {(isAdmin || isAccountant) && (
                       <td>
                         {t.status === "ACTIVE" && (
-                          <button className="close-btn" onClick={() => handleReverseVoucher(t.id)} title="Reverse Voucher Entry">
-                            <XCircle size={16} />
+                          <button className="btn-enterprise btn-danger" onClick={() => handleReverseVoucher(t.id)} title="Reverse Voucher Entry" style={{ padding: '0.4rem 0.6rem' }}>
+                            <XCircle size={14} /> Reverse
                           </button>
                         )}
                       </td>

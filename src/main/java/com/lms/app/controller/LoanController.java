@@ -101,6 +101,22 @@ public class LoanController {
         }
     }
 
+    // REPLACE SURETY
+    @PutMapping("/{id}/replace-surety")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK')")
+    public ResponseEntity<?> replaceSurety(
+            @PathVariable Long id,
+            @RequestParam int suretyIndex,
+            @RequestParam String newSurety) {
+        try {
+            Loan updatedLoan = loanService.replaceSurety(id, suretyIndex, newSurety);
+            return ResponseEntity.ok(updatedLoan);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
     // GET LOANS BY MEMBER
     @GetMapping("/member/{memberId}")
     @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")

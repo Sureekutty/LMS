@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,6 +83,56 @@ public class TransactionService {
         transaction.setStatus("ACTIVE");
 
         return transactionRepository.save(transaction);
+    }
+
+    // Process a Journal Voucher
+    @Transactional
+    public List<Transaction> postJournalVoucher(com.lms.app.dto.JournalVoucherRequest request) {
+        if (request.getEntries() == null || request.getEntries().isEmpty()) {
+            throw new RuntimeException("Voucher must have entries");
+        }
+
+        BigDecimal totalDebit = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+
+        for (com.lms.app.dto.JournalEntryDto entry : request.getEntries()) {
+            if ("DEBIT".equalsIgnoreCase(entry.getType())) {
+                totalDebit = totalDebit.add(entry.getAmount());
+            } else if ("CREDIT".equalsIgnoreCase(entry.getType())) {
+                totalCredit = totalCredit.add(entry.getAmount());
+            } else {
+                throw new RuntimeException("Invalid entry type: " + entry.getType());
+            }
+        }
+
+        if (totalDebit.compareTo(totalCredit) != 0) {
+            throw new RuntimeException("Debits (" + totalDebit + ") and Credits (" + totalCredit + ") must balance");
+        }
+
+        String jvNumber = "JV-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        java.util.concurrent.atomic.AtomicInteger index = new java.util.concurrent.atomic.AtomicInteger(1);
+        return request.getEntries().stream().map(entryDto -> {
+            Transaction t = new Transaction();
+            t.setTransactionNo(jvNumber + "-" + index.getAndIncrement());
+            t.setReferenceNo(jvNumber);
+            t.setTransactionDate(request.getTransactionDate() != null ? request.getTransactionDate() : LocalDateTime.now());
+            t.setDescription(request.getDescription());
+            t.setAmount(entryDto.getAmount());
+            t.setType(entryDto.getType().toUpperCase());
+            
+            TransactionType type = transactionTypeRepository.findById(entryDto.getTransactionTypeId())
+                    .orElseThrow(() -> new RuntimeException("Invalid Account/Transaction Type"));
+            t.setTransactionType(type);
+
+            if (entryDto.getMemberId() != null) {
+                Member member = memberRepository.findById(entryDto.getMemberId())
+                        .orElseThrow(() -> new RuntimeException("Invalid Member ID"));
+                t.setMember(member);
+            }
+
+            return transactionRepository.save(t);
+        }).toList();
     }
 
     // Reverse/Cancel a transaction

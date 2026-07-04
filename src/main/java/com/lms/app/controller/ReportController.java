@@ -23,7 +23,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/members/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadMembersCsv() {
         ByteArrayInputStream in = reportService.exportMembersToCsv();
         HttpHeaders headers = new HttpHeaders();
@@ -36,7 +36,7 @@ public class ReportController {
     }
 
     @GetMapping("/transactions/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadTransactionsCsv() {
         ByteArrayInputStream in = reportService.exportTransactionsToCsv();
         HttpHeaders headers = new HttpHeaders();
@@ -49,7 +49,7 @@ public class ReportController {
     }
 
     @GetMapping("/loans/csv")
-    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT','MEMBER')")
     public ResponseEntity<InputStreamResource> downloadLoansCsv() {
         ByteArrayInputStream in = reportService.exportLoansToCsv();
         HttpHeaders headers = new HttpHeaders();
@@ -58,6 +58,45 @@ public class ReportController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.parseMediaType("text/csv"))
+                .body(new InputStreamResource(in));
+    }
+
+    @GetMapping("/members/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    public ResponseEntity<InputStreamResource> downloadMembersPdf() {
+        ByteArrayInputStream in = reportService.exportMembersToPdf();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=members_report.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(in));
+    }
+
+    @GetMapping("/transactions/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','ACCOUNTANT')")
+    public ResponseEntity<InputStreamResource> downloadTransactionsPdf() {
+        ByteArrayInputStream in = reportService.exportTransactionsToPdf();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=transactions_ledger.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(in));
+    }
+
+    @GetMapping("/loans/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','CLERK','ACCOUNTANT')")
+    public ResponseEntity<InputStreamResource> downloadLoansPdf() {
+        ByteArrayInputStream in = reportService.exportLoansToPdf();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=loans_report.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(new InputStreamResource(in));
     }
 }

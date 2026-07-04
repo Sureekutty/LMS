@@ -1,0 +1,132 @@
+/* Bills.css - Component specific styles only */
+
+/* Consolidated Statement / Invoice CSS */
+.invoice-box {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  width: 550px;
+  max-width: 95vw;
+  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.15);
+  border: 1px solid #f1f5f9;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.invoice-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.invoice-header p,
+.invoice-details p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.invoice-details {
+  margin-bottom: 2rem;
+}
+
+.invoice-details h4 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.invoice-table th {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 2px solid var(--text-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.invoice-table td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.invoice-table tr.invoice-total td {
+  border-top: 2px solid var(--text-primary);
+  border-bottom: 2px solid var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.invoice-table tr.invoice-recovered td {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.invoice-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1.5rem;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+  gap: 1rem;
+  font-weight: 500;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+  color: var(--primary);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Print CSS */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-modal, .print-modal * {
+    visibility: visible;
+  }
+  .print-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+    backdrop-filter: none;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

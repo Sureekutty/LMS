@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, ArrowRight, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye } from "lucide-react";
+import { Landmark, ArrowLeft, Wallet, Calendar, Percent, PlusCircle, RefreshCw, XCircle, Eye, Search, FileSpreadsheet, Upload } from "lucide-react";
 import API from "../api/axios";
 import "./Deposits.css";
 
@@ -19,9 +19,12 @@ export default function Deposits() {
   const [loading, setLoading] = useState(true);
   const [selectedDeposit, setSelectedDeposit] = useState(null);
   const [bulkText, setBulkText] = useState("");
+  const [bulkFile, setBulkFile] = useState(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState("");
@@ -91,7 +94,7 @@ export default function Deposits() {
       setCalcMaturity(Math.round(amount));
     } else {
       // Recurring Deposit bracket compounding logic
-      let m1 = 0, m2 = 0, m3 = 0, m4 = 0, m5 = 0, maturity = 0;
+      let m1 = 0, m2 = 0, m3 = 0, m4 = 0, maturity = 0;
       if (dur <= 12) {
         m1 = (p * r * (dur * (dur + 1))) / 2400.0;
         maturity = m1 + (dur * p);
@@ -126,20 +129,37 @@ export default function Deposits() {
     setError("");
 
     try {
+      const principal = parseFloat(form.principalAmount);
+      const duration = parseInt(form.durationMonths);
+      
+      // Validate deposit type constraints
+      const selectedType = depositTypes.find(t => t.id === parseInt(form.depositTypeId));
+      if (selectedType && selectedType.minDurationMonths && duration < selectedType.minDurationMonths) {
+        setError(`The minimum duration for ${selectedType.typeCode} is ${selectedType.minDurationMonths} months.`);
+        setFormLoading(false);
+        return;
+      }
+
       const payload = {
         member: { id: form.memberId },
         depositType: { id: form.depositTypeId },
-        principalAmount: parseFloat(form.principalAmount),
-        durationMonths: parseInt(form.durationMonths),
+        principalAmount: principal,
+        durationMonths: duration,
       };
 
       await API.post("/deposits", payload);
       setFormSuccess("Deposit account opened successfully!");
-      setForm(emptyForm);
-      setShowForm(false);
-      fetchInitialData();
+      
+      // Auto-hide form after success
+      setTimeout(() => {
+        setForm(emptyForm);
+        setShowForm(false);
+        setFormSuccess("");
+        fetchInitialData();
+      }, 1500);
+
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to open deposit account.");
+      setError(err.response?.data?.error || err.response?.data?.message || "Failed to initiate deposit.");
     } finally {
       setFormLoading(false);
     }
@@ -147,41 +167,58 @@ export default function Deposits() {
 
   const handleBulkThriftUpload = async (e) => {
     e.preventDefault();
-    if (!bulkText.trim()) return;
-    setBulkLoading(true);
-    try {
-      const lines = bulkText.split("\n");
-      const records = lines
-        .map(line => {
-          const parts = line.split(",");
-          if (parts.length < 2) return null;
-          const codeOrNo = parts[0].trim();
-          const amt = parseFloat(parts[1].trim());
-          if (!codeOrNo || isNaN(amt)) return null;
-
-          return {
-            staffCode: codeOrNo.startsWith("MEM") ? "" : codeOrNo,
-            membershipNo: codeOrNo.startsWith("MEM") ? codeOrNo : "",
-            amount: amt
-          };
-        })
-        .filter(Boolean);
-
-      if (records.length === 0) {
-        alert("No valid records found. Format: Code,Amount (e.g. SC101,150.00)");
-        setBulkLoading(false);
-        return;
-      }
-
-      await API.post("/deposits/upload-thrift", records);
-      alert("Successfully posted bulk Thrift subscriptions!");
-      setBulkText("");
-      fetchInitialData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to process bulk thrift upload.");
-    } finally {
-      setBulkLoading(false);
+    if (!bulkFile) {
+      alert("Please select a CSV file first.");
+      return;
     }
+    setBulkLoading(true);
+    
+    import("papaparse").then((Papa) => {
+      Papa.default.parse(bulkFile, {
+        header: false,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          try {
+            const records = results.data
+              .map(parts => {
+                if (parts.length < 2) return null;
+                const codeOrNo = (parts[0] || "").trim();
+                const amt = parseFloat((parts[1] || "").trim());
+                if (!codeOrNo || isNaN(amt)) return null;
+
+                return {
+                  staffCode: codeOrNo.startsWith("MEM") ? "" : codeOrNo,
+                  membershipNo: codeOrNo.startsWith("MEM") ? codeOrNo : "",
+                  amount: amt
+                };
+              })
+              .filter(Boolean);
+
+            if (records.length === 0) {
+              alert("No valid records found in CSV. Format: Code,Amount");
+              setBulkLoading(false);
+              return;
+            }
+
+            await API.post("/deposits/upload-thrift", records);
+            alert("Successfully posted bulk Thrift subscriptions!");
+            setBulkFile(null);
+            if (document.getElementById("csvFileInput")) {
+              document.getElementById("csvFileInput").value = "";
+            }
+          } catch (err) {
+            alert("Error posting bulk subscriptions.");
+            console.error(err);
+          } finally {
+            setBulkLoading(false);
+          }
+        },
+        error: (err) => {
+          alert("Error parsing CSV: " + err.message);
+          setBulkLoading(false);
+        }
+      });
+    });
   };
 
   const handleCloseDeposit = async (id) => {
@@ -196,155 +233,204 @@ export default function Deposits() {
     }
   };
 
+  const downloadSampleCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8,MembershipNo,Amount\nMEM101,150.00\nMEM102,200.00";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bulk_thrift_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredDeposits = deposits.filter(d => 
+    (d.depositNo || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.member?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.member?.membershipNo || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.depositType?.typeName || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <main className="deposits-page">
-      <button className="back-btn" onClick={() => navigate("/dashboard")} style={{ marginBottom: 15, display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", fontWeight: 700, color: "#64748b" }}>
+    <main className="page-container animate__animated animate__fadeIn">
+      <button className="btn-enterprise btn-secondary mb-4" onClick={() => navigate("/dashboard")} style={{ marginBottom: 20 }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <header className="page-header">
-        <div>
-          <h1>Deposits & Savings</h1>
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-title-group">
+          <h1 className="gradient-heading">Deposits & Savings</h1>
           <p>Configure, open, and review interest accruals on savings accounts</p>
         </div>
-        {(isAdmin || isClerk) && (
-          <button className="open-form-btn" onClick={() => setShowForm(!showForm)}>
-            <PlusCircle size={18} />
-            Open Deposit Account
-          </button>
-        )}
       </header>
 
       {/* Dynamic Compounding Calculator */}
-      <section className="calculator-section">
-        <h3>Dynamic Deposit Compounding Calculator</h3>
-        <div className="calculator-grid">
-          <label>
-            <span>Principal Amount (₹)</span>
-            <input type="number" value={calcPrincipal} onChange={(e) => setCalcPrincipal(e.target.value)} />
+      <section className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Dynamic Deposit Compounding Calculator</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Principal Amount (₹)</span>
+            <input className="enterprise-input" type="number" value={calcPrincipal} onChange={(e) => setCalcPrincipal(e.target.value)} />
           </label>
-          <label>
-            <span>Interest Rate (%)</span>
-            <input type="number" step="0.1" value={calcRate} onChange={(e) => setCalcRate(e.target.value)} />
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Interest Rate (%)</span>
+            <input className="enterprise-input" type="number" step="0.1" value={calcRate} onChange={(e) => setCalcRate(e.target.value)} />
           </label>
-          <label>
-            <span>Tenure (Months)</span>
-            <input type="number" value={calcDuration} onChange={(e) => setCalcDuration(e.target.value)} />
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Tenure (Months)</span>
+            <input className="enterprise-input" type="number" value={calcDuration} onChange={(e) => setCalcDuration(e.target.value)} />
           </label>
-          <label>
-            <span>Deposit Type</span>
-            <select value={calcType} onChange={(e) => setCalcType(e.target.value)}>
+          <label className="enterprise-form-group">
+            <span className="enterprise-label">Deposit Type</span>
+            <select className="enterprise-select" value={calcType} onChange={(e) => setCalcType(e.target.value)}>
               <option value="FD">Fixed Deposit (Quarterly Compound)</option>
               <option value="RD">Recurring Deposit (Bracket Compound)</option>
             </select>
           </label>
-          <div className="calc-result">
-            <h4>Estimated Maturity Value</h4>
-            <div className="maturity-val">₹{calcMaturity.toLocaleString("en-IN")}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', backgroundColor: 'var(--primary)', color: 'white', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estimated Maturity</h4>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>₹{calcMaturity.toLocaleString("en-IN")}</div>
           </div>
         </div>
       </section>
 
-      {/* Thrift Uploading console for Admin and Clerks */}
-      {(isAdmin || isClerk) && (
-        <section className="calculator-section" style={{ marginTop: 25 }}>
-          <h3>Bulk Thrift Uploading Dispatcher</h3>
-          <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: 12 }}>
-            Input bulk subscription updates. Paste CSV rows in format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
-          </p>
-          <form onSubmit={handleBulkThriftUpload}>
-            <textarea
-              placeholder="SC101,150.00&#10;MEM001,200.00"
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-              style={{ width: "100%", height: 110, padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, fontFamily: "monospace", fontSize: "0.95rem" }}
-              required
-            />
-            <div style={{ marginTop: 10, textAlign: "right" }}>
-              <button type="submit" disabled={bulkLoading} className="open-form-btn" style={{ padding: "10px 20px" }}>
-                {bulkLoading ? "Posting Subscriptions..." : "Post Bulk Subscriptions"}
-              </button>
-            </div>
-          </form>
-        </section>
+      {/* Thrift Uploading Modal overlay */}
+      {showBulkForm && (
+        <div className="modal-overlay" onClick={() => setShowBulkForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Bulk Thrift Uploading Dispatcher</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: '1.5rem' }}>
+              Input bulk subscription updates. Format: <strong>StaffCode/MembershipNo,Amount</strong> (e.g. <code>SC101,150.00</code> on each line)
+            </p>
+            <form onSubmit={handleBulkThriftUpload}>
+              <div style={{ padding: '2rem', border: '2px dashed #cbd5e1', borderRadius: 'var(--radius-md)', background: '#f8fafc', textAlign: 'center', marginBottom: '1.5rem' }}>
+                <input
+                  type="file"
+                  id="csvFileInput"
+                  accept=".csv"
+                  onChange={(e) => setBulkFile(e.target.files[0])}
+                  style={{ width: "100%", padding: "10px" }}
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowBulkForm(false)}>Cancel</button>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={downloadSampleCSV}>
+                  <FileSpreadsheet size={16} /> Sample CSV
+                </button>
+                <button type="submit" disabled={bulkLoading} className="btn-enterprise btn-primary">
+                  {bulkLoading ? "Posting..." : "Post Subscriptions"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {/* Open Deposit Account Form */}
+      {/* Open Deposit Account Form Modal */}
       {showForm && (
-        <section className="deposit-form-wrapper">
-          <form onSubmit={handleOpenDeposit} className="deposit-form">
-            <h3>Open Deposit Account</h3>
-            
-            <div className="form-row">
-              <label>
-                <span>Select Member</span>
-                <select value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
-                  <option value="">-- Choose Member --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
-                  ))}
-                </select>
-              </label>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleOpenDeposit}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>Open Deposit Account</h3>
               
-              <label>
-                <span>Deposit Type</span>
-                <select value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
-                  <option value="">-- Choose Type --</option>
-                  {depositTypes.map(t => (
-                    <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
-                  ))}
-                  {/* Fallbacks if /api/deposits/types didn't return values */}
-                  {depositTypes.length === 0 && (
-                    <>
-                      <option value="1">Fixed Deposit (FD)</option>
-                      <option value="2">Recurring Deposit (RD)</option>
-                    </>
-                  )}
-                </select>
-              </label>
-            </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Select Member</span>
+                  <select className="enterprise-select" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} required>
+                    <option value="">-- Choose Member --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.membershipNo})</option>
+                    ))}
+                  </select>
+                </label>
+                
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Deposit Type</span>
+                  <select className="enterprise-select" value={form.depositTypeId} onChange={(e) => setForm({ ...form, depositTypeId: e.target.value })} required>
+                    <option value="">-- Choose Type --</option>
+                    {depositTypes.map(t => (
+                      <option key={t.id} value={t.id}>{t.typeName} ({t.typeCode})</option>
+                    ))}
+                    {/* Fallbacks if /api/deposits/types didn't return values */}
+                    {depositTypes.length === 0 && (
+                      <>
+                        <option value="1">Fixed Deposit (FD)</option>
+                        <option value="2">Recurring Deposit (RD)</option>
+                      </>
+                    )}
+                  </select>
+                </label>
 
-            <div className="form-row">
-              <label>
-                <span>Deposit Amount (₹)</span>
-                <input type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
-              </label>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Deposit Amount (₹)</span>
+                  <input className="enterprise-input" type="number" value={form.principalAmount} onChange={(e) => setForm({ ...form, principalAmount: e.target.value })} required />
+                </label>
 
-              <label>
-                <span>Tenure (Months)</span>
-                <input type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
-              </label>
-            </div>
+                <label className="enterprise-form-group" style={{ minWidth: 0 }}>
+                  <span className="enterprise-label">Tenure (Months)</span>
+                  <input className="enterprise-input" type="number" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} required />
+                </label>
+              </div>
 
-            {formSuccess && <div className="form-success-msg">{formSuccess}</div>}
-            {error && <div className="form-error-msg">{error}</div>}
+              {formSuccess && <div className="alert alert-success mt-4">{formSuccess}</div>}
+              {error && <div className="alert alert-danger mt-4">{error}</div>}
 
-            <div className="form-actions">
-              <button type="submit" disabled={formLoading} className="submit-btn">
-                {formLoading ? "Opening..." : "Open Account"}
-              </button>
-              <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
-            </div>
-          </form>
-        </section>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem' }}>
+                <button type="button" className="btn-enterprise btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" disabled={formLoading} className="btn-enterprise btn-primary">
+                  {formLoading ? "Opening..." : "Open Account"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Active Deposit list */}
-      <section className="deposits-list">
-        <h2>Active Deposit Accounts</h2>
-        {loading ? (
-          <div className="loading-state">
-            <RefreshCw size={28} className="spin-icon" />
-            <p>Fetching ledger records...</p>
+      <section>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Active Deposit Accounts</h2>
+          
+          <div className="members-header-actions" style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
+            <div className="search-bar-wrapper">
+              <Search size={18} color="#94a3b8" />
+              <input 
+                type="text" 
+                placeholder="Search by name, ID, or account..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="table-header-group">
+              {(isAdmin || isClerk) && (
+                <>
+                  <button className="btn-enterprise btn-secondary" onClick={() => setShowBulkForm(true)}>
+                    <Upload size={16} /> Bulk Thrift Upload
+                  </button>
+                  <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>
+                    <PlusCircle size={16} /> Open Deposit Account
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        ) : deposits.length === 0 ? (
+        </div>
+
+        {loading ? (
+          <div className="empty-state">
+            <RefreshCw size={28} className="spin-icon" />
+            <p style={{ marginTop: '1rem' }}>Fetching ledger records...</p>
+          </div>
+        ) : filteredDeposits.length === 0 ? (
           <div className="empty-state">
             <Wallet size={36} />
-            <p>No active deposit records found.</p>
+            <p style={{ marginTop: '1rem' }}>No active deposit records found.</p>
           </div>
         ) : (
-          <div className="table-wrap">
-            <table className="deposits-table">
+          <div className="table-wrapper">
+            <table className="enterprise-table">
               <thead>
                 <tr>
                   <th>Account No</th>
@@ -359,28 +445,34 @@ export default function Deposits() {
                 </tr>
               </thead>
               <tbody>
-                {deposits.map(d => (
-                  <tr key={d.id}>
-                    <td>{d.depositNo}</td>
-                    <td>{d.member?.name || "N/A"}</td>
-                    <td>{d.depositType?.typeName || "FD/RD Account"}</td>
-                    <td>₹{d.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
-                    <td>{d.interestRate}%</td>
-                    <td>{new Date(d.maturityDate).toLocaleDateString("en-IN")}</td>
-                    <td>₹{d.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                {filteredDeposits.map(d => (
+                  <tr key={d.id} className="interactive-row">
+                    <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{d.depositNo}</td>
                     <td>
-                      <span className={`status-badge ${d.status?.toLowerCase()}`}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{d.member?.name || "N/A"}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{d.member?.membershipNo}</div>
+                    </td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{d.depositType?.typeName || "FD/RD Account"}</td>
+                    <td style={{ fontWeight: 700 }}>₹{d.principalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{d.interestRate}%</td>
+                    <td style={{ color: '#64748b', fontWeight: 600 }}>{new Date(d.maturityDate).toLocaleDateString("en-IN")}</td>
+                    <td style={{ fontWeight: 700 }}>₹{d.maturityAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td>
+                      <span className={`badge badge-${
+                        d.status === 'ACTIVE' ? 'success' :
+                        d.status === 'CLOSED' ? 'secondary' : 'warning'
+                      }`}>
                         {d.status}
                       </span>
                     </td>
                     <td>
-                      <div className="action-row" style={{ display: "flex", gap: 10 }}>
-                        <button className="close-btn" onClick={() => setSelectedDeposit(d)} title="Inspect Account Details" style={{ color: "#0ea5e9" }}>
-                          <Eye size={16} />
+                      <div style={{ display: "flex", gap: "8px", alignItems: 'center' }}>
+                        <button className="btn-enterprise btn-secondary" onClick={() => setSelectedDeposit(d)} title="Inspect Account Details" style={{ padding: '0.4rem 0.6rem' }}>
+                          <Eye size={14} /> View
                         </button>
                         {d.status === "ACTIVE" && (isAdmin || isClerk) && (
-                          <button className="close-btn" onClick={() => handleCloseDeposit(d.id)} title="Liquidate Account">
-                            <XCircle size={16} />
+                          <button className="btn-enterprise btn-danger" onClick={() => handleCloseDeposit(d.id)} title="Liquidate Account" style={{ padding: '0.4rem 0.6rem' }}>
+                            <XCircle size={14} /> Close
                           </button>
                         )}
                       </div>
@@ -396,8 +488,8 @@ export default function Deposits() {
       {/* Selected Deposit Detailed Modal */}
       {selectedDeposit && (
         <div className="modal-overlay" onClick={() => setSelectedDeposit(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Deposit Account Inspector</h3>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>Deposit Account Inspector</h3>
             <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, margin: "20px 0", textAlign: "left", fontSize: "0.95rem" }}>
               <div><strong>Account No:</strong> {selectedDeposit.depositNo}</div>
               <div><strong>Member:</strong> {selectedDeposit.member?.name} ({selectedDeposit.member?.membershipNo})</div>
@@ -408,10 +500,15 @@ export default function Deposits() {
               <div><strong>Open Date:</strong> {new Date(selectedDeposit.openDate).toLocaleDateString("en-IN")}</div>
               <div><strong>Maturity Date:</strong> {new Date(selectedDeposit.maturityDate).toLocaleDateString("en-IN")}</div>
               <div><strong>Tenure:</strong> {selectedDeposit.durationMonths} Months</div>
-              <div><strong>Account Status:</strong> <span className={`status-badge ${selectedDeposit.status?.toLowerCase()}`}>{selectedDeposit.status}</span></div>
+              <div><strong>Account Status:</strong> 
+                <span className={`badge badge-${
+                        selectedDeposit.status === 'ACTIVE' ? 'success' :
+                        selectedDeposit.status === 'CLOSED' ? 'secondary' : 'warning'
+                      }`} style={{ marginLeft: 8 }}>{selectedDeposit.status}</span>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setSelectedDeposit(null)}>Close Inspector</button>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button className="btn-enterprise btn-secondary" onClick={() => setSelectedDeposit(null)}>Close Inspector</button>
             </div>
           </div>
         </div>

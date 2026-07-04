@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poll with Circle Icons and Labels</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script type="text/javascript" src="../../commonFiles/js/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript" src="../../commonFiles/js/jquery-ui-1.9.2.custom.js"></script>
+	<script type="text/javascript" src="../../screens/Poll/Poll.js" ></script>     
+     
+    <style>
+        body {
+            background: linear-gradient(to right, #e0c3fc, #8ec5fc);
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .poll-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            width: 340px;
+            text-align: center;
+        }
+        .poll-question {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .option-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .poll-option {
+            position: relative;
+        }
+        .poll-option input[type="radio"] {
+            display: none;
+        }
+        .poll-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 25px;
+            background: #f1f1f1;
+            transition: background 0.4s ease, color 0.4s ease;
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+            user-select: none;
+        }
+        .poll-option label:hover {
+            background: #d6e0ff;
+        }
+        /* Circle around emoji */
+        .icon-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6a5acd;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+            flex-shrink: 0;
+            transition: background 0.4s ease;
+        }
+        /* The text label next to the circle */
+        .option-label {
+            flex-grow: 1;
+            text-align: left;
+        }
+        /* When selected, highlight label and circle */
+        .poll-option input[type="radio"]:checked + label {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+        .poll-option input[type="radio"]:checked + label .icon-circle {
+            background: white;
+            color: #6a11cb;
+            box-shadow: 0 0 8px rgba(106,17,203,0.6);
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        .submit-btn {
+            margin-top: 28px;
+            padding: 14px 30px;
+            font-size: 16px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="poll-container">
+        <form action="savePoll.jsp" method="post" id="form">
+            <div class="poll-question">Choose Your Account Type</div>
+            <div class="option-wrapper">
+
+                <div class="poll-option">
+                    <input type="radio" id="bank" name="vote" value="Bank" required>
+                    <label for="bank">
+                        <span class="icon-circle">🏦</span>
+                        <span class="option-label">Bank</span>
+                    </label>
+                </div>
+
+                <div class="poll-option">
+                    <input type="radio" id="loan" name="vote" value="Loan Account">
+                    <label for="loan">
+                        <span class="icon-circle">💰</span>
+                        <span class="option-label">Loan Account</span>
+                    </label>
+                </div>
+
+                <div class="poll-option">
+                    <input type="radio" id="thrift" name="vote" value="Thrift Account">
+                    <label for="thrift">
+                        <span class="icon-circle">💰</span>
+                        <span class="option-label">Thrift Account</span>
+                    </label>
+                </div>
+
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn" name="submitBtn">Submit</button>
+            <input type="text" name="memcode" id="memcode" hidden>
+            <input type="text" name="pollOpt" id="pollOpt" hidden>
+        </form>
+    </div>
+</body>
+
+</html>
