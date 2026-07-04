@@ -38,7 +38,7 @@ export default function Bills() {
         const meRes = await API.get("/members/me");
         const member = meRes.data;
         if (member && member.id) {
-          const res = await API.get(`/api/bills/member/${member.id}`);
+          const res = await API.get(`/bills/member/${member.id}`);
           setBills(res.data || []);
         }
       } else {
