@@ -31,4 +31,4 @@ LMS_*.html
 
 # ===== AGENT WORKSPACE STUFF =====
 .agents/
-scratch/
+scratch/legacy_project/

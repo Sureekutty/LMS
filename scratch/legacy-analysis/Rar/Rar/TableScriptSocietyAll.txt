@@ -1,0 +1,989 @@
+IF OBJECT_ID ('speccs.AutoNumbers') IS NOT NULL
+	DROP TABLE speccs.AutoNumbers
+GO
+
+CREATE TABLE speccs.AutoNumbers
+	(
+	TableName        CHAR (50) NOT NULL,
+	DataItemName     CHAR (15) NOT NULL,
+	StartValue       VARCHAR (5) NOT NULL,
+	StartNo          CHAR (14) NOT NULL,
+	LengthOfDataItem INT NOT NULL,
+	LastUpdatedNo    CHAR (14) NOT NULL,
+	UserId           CHAR (7) NULL,
+	RegTime          DATETIME NULL,
+	LastUpdatedTime  DATETIME NULL
+	)
+GO
+----------------------------
+
+IF OBJECT_ID ('speccs.BankBalance') IS NOT NULL
+	DROP TABLE speccs.BankBalance
+GO
+
+CREATE TABLE speccs.BankBalance
+	(
+	BankCode    VARCHAR (3) NOT NULL,
+	BankName    VARCHAR (50) NOT NULL,
+	BankBalance FLOAT NOT NULL,
+	RegTime     DATETIME NOT NULL,
+	UserId      VARCHAR (7) NOT NULL
+	)
+GO
+
+--------------------------
+IF OBJECT_ID ('speccs.BankTransactions') IS NOT NULL
+	DROP TABLE speccs.BankTransactions
+GO
+
+CREATE TABLE speccs.BankTransactions
+	(
+	ReceiptNo       VARCHAR (25) NOT NULL,
+	TransactionDate DATE NOT NULL,
+	Amount          FLOAT NOT NULL,
+	BankName        VARCHAR (50) NOT NULL,
+	BankBalance     FLOAT NOT NULL,
+	PurCode         VARCHAR (50) NOT NULL,
+	RefNo           VARCHAR (25) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	UserId          VARCHAR (7) NOT NULL
+	)
+GO
+
+-----------------------
+IF OBJECT_ID ('speccs.Bills') IS NOT NULL
+	DROP TABLE speccs.Bills
+GO
+
+CREATE TABLE speccs.Bills
+	(
+	MemAccNo       VARCHAR (5) NOT NULL,
+	BillNo         VARCHAR (13) NOT NULL,
+	BillingDate    DATE NOT NULL,
+	VoucherNo      VARCHAR (13) NULL,
+	JournalEntryNo VARCHAR (13) NULL,
+	PurposeCode    VARCHAR (3) NOT NULL,
+	Amount         DECIMAL (15,2) NOT NULL,
+	ModeOfPayment  VARCHAR (15) NULL,
+	Status         VARCHAR (10) NOT NULL,
+	RefNo          VARCHAR (30) NULL,
+	Remarks        VARCHAR (250) NULL,
+	UserId         CHAR (7) NOT NULL,
+	RegTime        DATETIME NOT NULL,
+	CONSTRAINT PK_BILLNO PRIMARY KEY (BillNo)
+	)
+GO
+
+-------------------
+
+IF OBJECT_ID ('speccs.DailyAccountsProcessing') IS NOT NULL
+	DROP TABLE speccs.DailyAccountsProcessing
+GO
+
+CREATE TABLE speccs.DailyAccountsProcessing
+	(
+	ProcessDate DATETIME NOT NULL,
+	AccountCode INT NOT NULL,
+	Amount      FLOAT NOT NULL,
+	RegTime     DATETIME NOT NULL,
+	UserId      VARCHAR (7) NOT NULL
+	)
+GO
+
+-----------------------
+IF OBJECT_ID ('speccs.Deposits') IS NOT NULL
+	DROP TABLE speccs.Deposits
+GO
+
+CREATE TABLE speccs.Deposits
+	(
+	MemAccNo          VARCHAR (10) NOT NULL,
+	DepositNo         VARCHAR (10) NOT NULL,
+	DepositType       VARCHAR (3) NOT NULL,
+	OpenDate          DATE NOT NULL,
+	MaturityDate      DATE NULL,
+	Duration          INT NOT NULL,
+	IntRate           DECIMAL (5,2) NOT NULL,
+	PenalIntRate      DECIMAL (5,2) NULL,
+	Subscription      DECIMAL (15,2) NOT NULL,
+	MaturityAmount    DECIMAL (15,2) NULL,
+	PreviousDepositNo VARCHAR (10) NULL,
+	CloseDate         DATETIME NULL,
+	SettlementAmount  DECIMAL (15,2) NULL,
+	AdjustedAmount    DECIMAL (15,2) NULL,
+	AdjustRefNo       VARCHAR (15) NULL,
+	Status            VARCHAR (15) NULL,
+	Remarks           VARCHAR (250) NULL,
+	RegTime           DATE NOT NULL,
+	UserId            CHAR (7) NOT NULL,
+	CONSTRAINT DEPOSITS_PK PRIMARY KEY (DepositNo)
+	)
+GO
+
+------------------
+
+IF OBJECT_ID ('speccs.DepositTransactions') IS NOT NULL
+	DROP TABLE speccs.DepositTransactions
+GO
+
+CREATE TABLE speccs.DepositTransactions
+	(
+	MemaccNo        VARCHAR (7) NOT NULL,
+	TxnId           NUMERIC (18) IDENTITY NOT NULL,
+	DepositTypeCode VARCHAR (3) NOT NULL,
+	RefNo           VARCHAR (10) NOT NULL,
+	Month           VARCHAR (8) NOT NULL,
+	TxnDate         DATETIME NOT NULL,
+	ModeOfPayment   VARCHAR (15) NOT NULL,
+	Amount          DECIMAL (15,2) NOT NULL,
+	OpeningBalance  DECIMAL (15,2) NOT NULL,
+	ClosingBalance  DECIMAL (15,2) NOT NULL,
+	ReceiptNo       VARCHAR (13) NOT NULL,
+	UserId          VARCHAR (7) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	CONSTRAINT DEPOSTITTYPE_FK FOREIGN KEY (DepositTypeCode) REFERENCES speccs.DepositTypes (DepositTypeCode)
+	)
+GO
+
+-----------------------
+
+
+IF OBJECT_ID ('speccs.EmployeeData') IS NOT NULL
+	DROP TABLE speccs.EmployeeData
+GO
+
+CREATE TABLE speccs.EmployeeData
+	(
+	MemEmpCode  CHAR (7) NOT NULL,
+	MemName     CHAR (50) NOT NULL,
+	PanNo       CHAR (20) NULL,
+	AadharNo    CHAR (15) NULL,
+	Phone       CHAR (15) NULL,
+	OffPhone    CHAR (15) NULL,
+	CareOf      CHAR (50) NULL,
+	Division    CHAR (50) NOT NULL,
+	Designation CHAR (50) NOT NULL,
+	MailId      CHAR (50) NULL,
+	BasicPay    DECIMAL (10,2) NOT NULL,
+	Dob         DATE NOT NULL,
+	RetiredDate DATE NOT NULL,
+	BankAccNo   CHAR (15) NULL,
+	IfscCode    CHAR (14) NULL,
+	BankName    CHAR (25) NULL,
+	BankPlace   CHAR (25) NULL,
+	UserId      CHAR (7) NOT NULL,
+	RegTime     DATETIME NOT NULL,
+	Status      CHAR (10) NOT NULL,
+	CONSTRAINT pk_MEMEMPCODE PRIMARY KEY (MemEmpCode)
+	)
+GO
+
+---------------
+
+IF OBJECT_ID ('speccs.Interest') IS NOT NULL
+	DROP TABLE speccs.Interest
+GO
+
+CREATE TABLE speccs.Interest
+	(
+	IntCode         VARCHAR (3) NOT NULL,
+	SlNo            INT IDENTITY NOT NULL,
+	IntDescription  VARCHAR (250) NULL,
+	MinAmount       DECIMAL (15,2) NULL,
+	MaxAmount       DECIMAL (15,2) NULL,
+	MinMonth        INT NULL,
+	MaxMonth        INT NULL,
+	EffFromDate     DATETIME NOT NULL,
+	EffToDate       DATETIME NOT NULL,
+	InterestType    VARCHAR (3) NOT NULL,
+	RateOfInterest  DECIMAL (5,2) NOT NULL,
+	InterstCalcTerm VARCHAR (6) NOT NULL,
+	UserId          VARCHAR (7) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	CONSTRAINT INTEREST_PK PRIMARY KEY (IntCode,SlNo,EffFromDate)
+	)
+GO
+
+----------------
+
+IF OBJECT_ID ('speccs.Loans') IS NOT NULL
+	DROP TABLE speccs.Loans
+GO
+
+CREATE TABLE speccs.Loans
+	(
+	MemAccNo                   VARCHAR (10) NOT NULL,
+	LoanAccNo                  VARCHAR (12) NOT NULL,
+	LoanType                   VARCHAR (3) NOT NULL,
+	LoanPurpose                VARCHAR (250) NULL,
+	NoOfInstallments           INT NOT NULL,
+	MonthlyInstallments        INT NOT NULL,
+	Thriftdudamt               INT NULL,
+	LoanStatus                 VARCHAR (10) NOT NULL,
+	FundId                     VARCHAR (10) NULL,
+	LoanSanctionAmount         NUMERIC (20,2) NULL,
+	InterestMethod             VARCHAR (3) NULL,
+	InterestRate               DECIMAL (5,2) NULL,
+	LoanSanctionDate           DATE NULL,
+	InterestCalculatedFromDate DATETIME NULL,
+	DisbursedOnDate            DATETIME NULL,
+	DisbursedOnUserId          VARCHAR (7) NULL,
+	ClosedOnDate               DATETIME NULL,
+	ClosedOnUserId             VARCHAR (7) NULL,
+	Surety1                    VARCHAR (10) NOT NULL,
+	Surety2                    VARCHAR (10) NOT NULL,
+	Surety3                    VARCHAR (10) NOT NULL,
+	Loanappdate                DATETIME NULL,
+	Loanrejecteddate           DATETIME NULL,
+	Recoverydate               DATETIME NULL,
+	Releaseddate               DATETIME NULL,
+	Remarks                    VARCHAR (90) NULL,
+	UserId                     VARCHAR (7) NOT NULL,
+	RegTime                    DATETIME NOT NULL,
+	ChequeAmount               NUMERIC (20,2) NULL,
+	CONSTRAINT PK_LOANACCNO PRIMARY KEY (LoanAccNo)
+	)
+GO
+
+-------------------
+IF OBJECT_ID ('speccs.Loanstatus') IS NOT NULL
+	DROP TABLE speccs.Loanstatus
+GO
+
+CREATE TABLE speccs.Loanstatus
+	(
+	MemAccNo                   VARCHAR (10) NOT NULL,
+	LoanAccNo                  VARCHAR (12) NOT NULL,
+	LoanType                   VARCHAR (3) NOT NULL,
+	LoanPurpose                VARCHAR (250) NULL,
+	NoOfInstallments           INT NOT NULL,
+	MonthlyInstallments        INT NOT NULL,
+	Thriftdudamt               INT NULL,
+	LoanStatus                 VARCHAR (10) NOT NULL,
+	FundId                     VARCHAR (10) NULL,
+	LoanSanctionAmount         NUMERIC (20,2) NULL,
+	InterestMethod             VARCHAR (3) NULL,
+	InterestRate               DECIMAL (5,2) NULL,
+	LoanSanctionDate           DATE NULL,
+	InterestCalculatedFromDate DATETIME NULL,
+	DisbursedOnDate            DATETIME NULL,
+	DisbursedOnUserId          VARCHAR (7) NULL,
+	ClosedOnDate               DATETIME NULL,
+	ClosedOnUserId             VARCHAR (7) NULL,
+	Surety1                    VARCHAR (10) NOT NULL,
+	Surety2                    VARCHAR (10) NOT NULL,
+	Surety3                    VARCHAR (10) NOT NULL,
+	Loanappdate                DATETIME NULL,
+	Loanrejecteddate           DATETIME NULL,
+	Recoverydate               DATETIME NULL,
+	Releaseddate               DATETIME NULL,
+	Remarks                    VARCHAR (90) NULL,
+	UserId                     VARCHAR (7) NOT NULL,
+	RegTime                    DATETIME NOT NULL,
+	ChequeAmount               NUMERIC (20,2) NULL
+	)
+GO
+
+---------------------
+
+IF OBJECT_ID ('speccs.LoanTransactions') IS NOT NULL
+	DROP TABLE speccs.LoanTransactions
+GO
+
+CREATE TABLE speccs.LoanTransactions
+	(
+	TxnId           BIGINT IDENTITY NOT NULL,
+	LoanAccNo       VARCHAR (12) NOT NULL,
+	TransactionDate DATE NOT NULL,
+	PayCode         VARCHAR (3) NOT NULL,
+	Amount          FLOAT NOT NULL,
+	P_I             VARCHAR (1) NOT NULL,
+	ReceiptNo       VARCHAR (14) NOT NULL,
+	Modeofpay       VARCHAR (10) NOT NULL,
+	ClosingBal      INT NULL,
+	RegTime         DATETIME NOT NULL,
+	UserId          VARCHAR (7) NOT NULL
+	)
+GO
+
+-----------------------
+IF OBJECT_ID ('speccs.Login') IS NOT NULL
+	DROP TABLE speccs.Login
+GO
+
+CREATE TABLE speccs.Login
+	(
+	UserId      CHAR (7) NOT NULL,
+	UserName    VARCHAR (50) NOT NULL,
+	Designation VARCHAR (50) NOT NULL,
+	Password    CHAR (8) NOT NULL,
+	Role1       INT NOT NULL
+	)
+GO
+
+----------------
+IF OBJECT_ID ('speccs.MemAddress') IS NOT NULL
+	DROP TABLE speccs.MemAddress
+GO
+
+CREATE TABLE speccs.MemAddress
+	(
+	MemberId VARCHAR (8) NOT NULL,
+	MemAccNo CHAR (5) NOT NULL,
+	Address1 VARCHAR (255) NOT NULL,
+	Address2 VARCHAR (100) NOT NULL,
+	City     VARCHAR (25) NOT NULL,
+	District VARCHAR (25) NOT NULL,
+	State    VARCHAR (25) NOT NULL,
+	Pincode  VARCHAR (6) NOT NULL,
+	Remarks  VARCHAR (205) NULL,
+	UserId   CHAR (7) NOT NULL,
+	RegTime  DATETIME NOT NULL,
+	CONSTRAINT PK_MEMID PRIMARY KEY (MemberId)
+	)
+GO
+
+---------------
+
+IF OBJECT_ID ('speccs.MemberAccount') IS NOT NULL
+	DROP TABLE speccs.MemberAccount
+GO
+
+CREATE TABLE speccs.MemberAccount
+	(
+	MemAccNo                 CHAR (5) NOT NULL,
+	MembershipFee            INT NULL,
+	ThriftSubscriptionAmount INT NULL,
+	ThriftBalance            NUMERIC (13,2) NULL,
+	ShareAmount              NUMERIC (13,2) NULL,
+	NoOfShares               INT NOT NULL,
+	WelfareFund              NUMERIC (13,2) NULL,
+	SERBS                    NUMERIC (13,2) NULL,
+	Insurance_Loan           NUMERIC (13,2) NULL,
+	Insurance_Thrift         NUMERIC (13,2) NULL,
+	UserId                   CHAR (7) NOT NULL,
+	RegTime                  DATETIME NOT NULL
+	)
+GO
+
+--------------------
+
+IF OBJECT_ID ('speccs.MemberBank') IS NOT NULL
+	DROP TABLE speccs.MemberBank
+GO
+
+CREATE TABLE speccs.MemberBank
+	(
+	MemAccNo  CHAR (5) NOT NULL,
+	Bankaccno VARCHAR (20) NOT NULL,
+	Ifsccode  VARCHAR (15) NULL,
+	Bankname  VARCHAR (150) NOT NULL,
+	Bankplace VARCHAR (200) NOT NULL,
+	UserId    CHAR (7) NOT NULL,
+	RegTime   DATETIME NOT NULL
+	)
+GO
+
+--------------
+IF OBJECT_ID ('speccs.Members') IS NOT NULL
+	DROP TABLE speccs.Members
+GO
+
+CREATE TABLE speccs.Members
+	(
+	MemAccNo    CHAR (5) NOT NULL,
+	MemEmpCode  CHAR (7) NOT NULL,
+	MemName     VARCHAR (25) DEFAULT '' NOT NULL,
+	PanNo       VARCHAR (20) DEFAULT '' NOT NULL,
+	AadharNo    VARCHAR (20) DEFAULT '' NOT NULL,
+	MailId      VARCHAR (150) DEFAULT '' NOT NULL,
+	Designation VARCHAR (60) DEFAULT '' NOT NULL,
+	Division    VARCHAR (75) DEFAULT '' NOT NULL,
+	Phone       CHAR (12) NOT NULL,
+	OffPhone    CHAR (12) NOT NULL,
+	BankAccNo   CHAR (15) NULL,
+	IfscCode    CHAR (11) NOT NULL,
+	BankName    VARCHAR (100) DEFAULT '' NOT NULL,
+	BankAddress VARCHAR (80) DEFAULT '' NOT NULL,
+	BankPlace   VARCHAR (75) DEFAULT '' NOT NULL,
+	BasicPay    DECIMAL (11) NOT NULL,
+	MemDate     DATE NOT NULL,
+	Dob         DATE NOT NULL,
+	RetiredDate DATE NOT NULL,
+	Status      CHAR (10) DEFAULT '' NOT NULL,
+	CareOf      VARCHAR (25) DEFAULT '' NOT NULL,
+	ClosedDate  DATETIME NULL,
+	Remarks     CHAR (100) NOT NULL,
+	UserId      CHAR (7) NOT NULL,
+	RegTime     DATETIME NOT NULL,
+	CONSTRAINT PK_MEMACCNO PRIMARY KEY (MemAccNo)
+	)
+GO
+
+------------------
+IF OBJECT_ID ('speccs.MembersBasic') IS NOT NULL
+	DROP TABLE speccs.MembersBasic
+GO
+
+CREATE TABLE speccs.MembersBasic
+	(
+	MemEmpCode CHAR (7) NOT NULL,
+	BasicPay   DECIMAL (11) NOT NULL
+	)
+GO
+
+-------------------
+
+IF OBJECT_ID ('speccs.MiscellaneousPayment') IS NOT NULL
+	DROP TABLE speccs.MiscellaneousPayment
+GO
+
+CREATE TABLE speccs.MiscellaneousPayment
+	(
+	MemAccNo    VARCHAR (10) NOT NULL,
+	PurposeCode VARCHAR (5) NOT NULL,
+	PayDate     VARCHAR (10) NOT NULL,
+	Amount      NUMERIC (15,2) NOT NULL,
+	ChequeNo    VARCHAR (30) NOT NULL,
+	Remarks     VARCHAR (200) NOT NULL,
+	PaymentNo   VARCHAR (13) NOT NULL
+	)
+GO
+
+--------------------
+IF OBJECT_ID ('speccs.MisPayments') IS NOT NULL
+	DROP TABLE speccs.MisPayments
+GO
+
+CREATE TABLE speccs.MisPayments
+	(
+	MisNo         VARCHAR (10) NOT NULL,
+	Month         DATE NOT NULL,
+	ModeOfPayment VARCHAR (15) NOT NULL,
+	PaidInterest  DECIMAL (15,2) NOT NULL,
+	UserId        VARCHAR (7) NOT NULL,
+	RegTime       DATETIME NOT NULL,
+	Status        VARCHAR (15) NULL
+	)
+GO
+
+----------------
+
+IF OBJECT_ID ('speccs.MisPaymentsdummy') IS NOT NULL
+	DROP TABLE speccs.MisPaymentsdummy
+GO
+
+CREATE TABLE speccs.MisPaymentsdummy
+	(
+	MisNo         VARCHAR (10) NOT NULL,
+	Month         DATE NOT NULL,
+	ModeOfPayment VARCHAR (15) NOT NULL,
+	PaidInterest  DECIMAL (15,2) NOT NULL,
+	UserId        VARCHAR (7) NOT NULL,
+	RegTime       DATETIME NOT NULL,
+	Status        VARCHAR (15) NULL
+	)
+GO
+
+
+--------------
+
+IF OBJECT_ID ('speccs.MonthlyInstallModify') IS NOT NULL
+	DROP TABLE speccs.MonthlyInstallModify
+GO
+
+CREATE TABLE speccs.MonthlyInstallModify
+	(
+	MemAccNo            CHAR (5) NOT NULL,
+	MemEmpCode          CHAR (7) NOT NULL,
+	MonthlyInstallments INT NOT NULL
+	)
+GO
+
+---------------------
+IF OBJECT_ID ('speccs.MonthlyInstallModifyThrift') IS NOT NULL
+	DROP TABLE speccs.MonthlyInstallModifyThrift
+GO
+
+CREATE TABLE speccs.MonthlyInstallModifyThrift
+	(
+	MemAccNo                 CHAR (5) NOT NULL,
+	MemEmpCode               CHAR (7) NOT NULL,
+	ThriftSubscriptionAmount INT NOT NULL
+	)
+GO
+
+
+---------------
+
+IF OBJECT_ID ('speccs.MonthlyProcess') IS NOT NULL
+	DROP TABLE speccs.MonthlyProcess
+GO
+
+CREATE TABLE speccs.MonthlyProcess
+	(
+	Month           VARCHAR (10) NOT NULL,
+	Memcode         VARCHAR (7) NOT NULL,
+	Purposecode     VARCHAR (3) NOT NULL,
+	Refid           VARCHAR (14) NOT NULL,
+	Processdate     DATETIME NOT NULL,
+	Empcode         VARCHAR (7) NOT NULL,
+	Salcode         INT NOT NULL,
+	Recoveryamount  FLOAT NOT NULL,
+	Recoveredamount FLOAT NOT NULL,
+	RecoveredDate   DATETIME NULL,
+	Regstatus       CHAR (1) NOT NULL,
+	UserId          VARCHAR (7) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	CONSTRAINT PK PRIMARY KEY (Month,Memcode,Purposecode,Refid)
+	)
+GO
+
+---------------------
+
+IF OBJECT_ID ('speccs.MonthlyResponse') IS NOT NULL
+	DROP TABLE speccs.MonthlyResponse
+GO
+
+CREATE TABLE speccs.MonthlyResponse
+	(
+	LoanAccNo       VARCHAR (12) NOT NULL,
+	MemaccNo        VARCHAR (12) NOT NULL,
+	TransactionDate DATE NOT NULL,
+	PayCode         VARCHAR (3) NOT NULL,
+	Amount          FLOAT NOT NULL,
+	P_I             VARCHAR (1) NOT NULL,
+	Modeofpay       VARCHAR (10) NOT NULL,
+	ClosingBal      INT DEFAULT 0 NOT NULL,
+	Status          VARCHAR (15) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	UserId          VARCHAR (7) NOT NULL,
+	CONSTRAINT PK_LOANTXNS PRIMARY KEY (LoanAccNo,TransactionDate,PayCode)
+	)
+GO
+
+------------------
+IF OBJECT_ID ('speccs.Nominee') IS NOT NULL
+	DROP TABLE speccs.Nominee
+GO
+
+CREATE TABLE speccs.Nominee
+	(
+	NomineeId    VARCHAR (8) NOT NULL,
+	MemAccNo     CHAR (5) NOT NULL,
+	NomName      VARCHAR (25) NOT NULL,
+	NomDOB       VARCHAR (10) NULL,
+	Relationship VARCHAR (25) NOT NULL,
+	Gender       VARCHAR (10) DEFAULT "MALE" NOT NULL CONSTRAINT Nominee_CK_GENDER CHECK          (Gender in ("MALE","FEMALE")),
+	Address      VARCHAR (100) NULL,
+	Status       CHAR (10) NULL,
+	UserId       CHAR (7) NOT NULL,
+	RegTime      DATETIME NOT NULL,
+	CONSTRAINT PK_NOMID PRIMARY KEY (NomineeId)
+	)
+GO
+
+---------------
+
+IF OBJECT_ID ('speccs.NomineeRef') IS NOT NULL
+	DROP TABLE speccs.NomineeRef
+GO
+
+CREATE TABLE speccs.NomineeRef
+	(
+	NomineeId   VARCHAR (8) NULL,
+	NomineeType VARCHAR (15) NULL,
+	ReferenceNo CHAR (15) NULL,
+	Depositno   VARCHAR (10) NOT NULL,
+	UserId      CHAR (7) NOT NULL,
+	RegTime     DATETIME NOT NULL
+	)
+GO
+
+------------------------
+IF OBJECT_ID ('speccs.Payments') IS NOT NULL
+	DROP TABLE speccs.Payments
+GO
+
+CREATE TABLE speccs.Payments
+	(
+	MemAccNo      VARCHAR (5) NOT NULL,
+	PayVoucherNo  VARCHAR (13) NOT NULL,
+	VoucherDate   DATE NOT NULL,
+	PurposeCode   VARCHAR (3) NOT NULL,
+	Amount        DECIMAL (15,2) NOT NULL,
+	ModeOfPayment VARCHAR (15) NOT NULL,
+	Status        VARCHAR (10) NOT NULL,
+	RefNo         VARCHAR (30) NULL,
+	Remarks       VARCHAR (250) NULL,
+	UserId        CHAR (7) NOT NULL,
+	RegTime       DATETIME NOT NULL,
+	CONSTRAINT PK_PAYVOUCHERNO PRIMARY KEY (PayVoucherNo)
+	)
+GO
+
+-----------------
+IF OBJECT_ID ('speccs.PayVouchers') IS NOT NULL
+	DROP TABLE speccs.PayVouchers
+GO
+
+CREATE TABLE speccs.PayVouchers
+	(
+	PayVoucherNo  VARCHAR (13) NOT NULL,
+	VoucherDate   DATETIME NOT NULL,
+	Amount        DECIMAL (15,2) NOT NULL,
+	ModeOfPayment VARCHAR (15) NULL,
+	Status        VARCHAR (10) NULL,
+	AccountNo     VARCHAR (20) NULL,
+	ChequeNo      VARCHAR (20) NULL,
+	ChequeDate    DATETIME NULL,
+	Remarks       VARCHAR (250) NULL,
+	UserId        CHAR (7) NOT NULL,
+	RegTime       DATETIME NOT NULL,
+	CONSTRAINT PK_VOUCHERNO PRIMARY KEY (PayVoucherNo)
+	)
+GO
+
+------------------
+IF OBJECT_ID ('speccs.ProcessMonth') IS NOT NULL
+	DROP TABLE speccs.ProcessMonth
+GO
+
+CREATE TABLE speccs.ProcessMonth
+	(
+	TransactionMonth     DATETIME NOT NULL,
+	ProcessFlag          VARCHAR (1) DEFAULT 'N' NOT NULL,
+	UserId               VARCHAR (7) NOT NULL,
+	RegTime              DATETIME NOT NULL,
+	DemandListSentFlag   VARCHAR (1) DEFAULT "N" NOT NULL,
+	SalaryRecoveryStatus VARCHAR (1) DEFAULT "N" NOT NULL,
+	PRIMARY KEY (TransactionMonth)
+	)
+GO
+
+
+------------------------
+IF OBJECT_ID ('speccs.ProcessStatus') IS NOT NULL
+	DROP TABLE speccs.ProcessStatus
+GO
+
+CREATE TABLE speccs.ProcessStatus
+	(
+	ProcessType VARCHAR (20) NOT NULL,
+	StatusCode  VARCHAR (50) NOT NULL,
+	MenuLabel   VARCHAR (50) NULL,
+	InfoLabel   VARCHAR (50) NULL,
+	RegTime     DATE NOT NULL,
+	UserId      CHAR (7) NOT NULL,
+	CONSTRAINT DEPOSITS_PK PRIMARY KEY (ProcessType,StatusCode)
+	)
+GO
+
+---------------------
+
+IF OBJECT_ID ('speccs.Receipts') IS NOT NULL
+	DROP TABLE speccs.Receipts
+GO
+
+CREATE TABLE speccs.Receipts
+	(
+	MemAccNO      VARCHAR (5) NOT NULL,
+	ReceiptNo     VARCHAR (13) NOT NULL,
+	ReceiptDate   DATETIME NOT NULL,
+	PurposeCode   VARCHAR (3) NOT NULL,
+	Amount        DECIMAL (15,2) NOT NULL,
+	ModeOfPayment VARCHAR (15) NOT NULL,
+	UserId        CHAR (7) NOT NULL,
+	RegTime       DATETIME NOT NULL,
+	Status        CHAR (10) NULL,
+	Remarks       VARCHAR (250) NULL,
+	RefNo         VARCHAR (15) NULL,
+	BankCode      VARCHAR (3) NULL
+	)
+GO
+
+
+------------------------
+
+IF OBJECT_ID ('speccs.Relations') IS NOT NULL
+	DROP TABLE speccs.Relations
+GO
+
+CREATE TABLE speccs.Relations
+	(
+	RId          INT IDENTITY NOT NULL,
+	RelationName VARCHAR (25) NOT NULL,
+	CONSTRAINT PK_Relation_RId PRIMARY KEY (RId)
+	)
+GO
+
+
+------------------------
+IF OBJECT_ID ('speccs.Rules') IS NOT NULL
+	DROP TABLE speccs.Rules
+GO
+
+CREATE TABLE speccs.Rules
+	(
+	RuleCode        CHAR (3) NOT NULL,
+	RuleDescription VARCHAR (50) NOT NULL,
+	RuleValue       NUMERIC (13,2) NOT NULL,
+	UserId          CHAR (7) NOT NULL,
+	RecTime         DATETIME NOT NULL,
+	CONSTRAINT PK_RuleCode PRIMARY KEY (RuleCode)
+	)
+GO
+
+----------------------
+
+IF OBJECT_ID ('speccs.Shares') IS NOT NULL
+	DROP TABLE speccs.Shares
+GO
+
+CREATE TABLE speccs.Shares
+	(
+	MemAccNo             VARCHAR (10) NOT NULL,
+	FromDate             DATETIME NOT NULL,
+	ToDate               DATETIME NULL,
+	ModeOfPayment        VARCHAR (15) NOT NULL,
+	IssuedShare          INT NOT NULL,
+	TotalSubscribedShare INT NOT NULL,
+	CapitalAmount        DECIMAL (15,2) NOT NULL,
+	ReceiptNo            VARCHAR (13) NOT NULL,
+	UserId               VARCHAR (7) NOT NULL,
+	RegTime              DATETIME NOT NULL,
+	CONSTRAINT SHARE_PK PRIMARY KEY (MemAccNo,FromDate)
+	)
+GO
+-----------------------
+
+IF OBJECT_ID ('speccs.SP_RDUploads') IS NOT NULL
+	DROP TABLE speccs.SP_RDUploads
+GO
+
+CREATE TABLE speccs.SP_RDUploads
+	(
+	EmpCode    VARCHAR (50) NOT NULL,
+	UploadDate DATETIME NOT NULL,
+	RegDate    DATETIME NOT NULL,
+	Amount     FLOAT NOT NULL,
+	RDNumber   VARCHAR (50) NOT NULL
+	)
+GO
+
+
+----------------------
+
+IF OBJECT_ID ('speccs.Staff') IS NOT NULL
+	DROP TABLE speccs.Staff
+GO
+
+CREATE TABLE speccs.Staff
+	(
+	SMemAccNo   CHAR (5) NOT NULL,
+	SEmpName    VARCHAR (70) NOT NULL,
+	PanNo       VARCHAR (20) NOT NULL,
+	AdhaarNo    VARCHAR (20) NOT NULL,
+	MailId      VARCHAR (150) NOT NULL,
+	Phone       CHAR (12) NOT NULL,
+	OfficePhone CHAR (12) NOT NULL,
+	BasicPay    DECIMAL (11) NOT NULL,
+	MemDate     DATE NOT NULL,
+	Dob         DATE NOT NULL,
+	RegDate     DATE NOT NULL,
+	RegStatus   CHAR (10) NOT NULL,
+	CareOf      VARCHAR (30) NOT NULL,
+	Remarks     VARCHAR (150) NULL,
+	UserID      CHAR (7) NOT NULL,
+	RegTime     DATETIME NOT NULL,
+	CONSTRAINT PK_SMEMACCNO PRIMARY KEY (SMemAccNo)
+	)
+GO
+
+
+------------------
+
+IF OBJECT_ID ('speccs.Surety') IS NOT NULL
+	DROP TABLE speccs.Surety
+GO
+
+CREATE TABLE speccs.Surety
+	(
+	MemAccNo    VARCHAR (10) NOT NULL,
+	SMemAccNo   VARCHAR (10) NOT NULL,
+	SuretyOrder INT NOT NULL,
+	Status      VARCHAR (10) NOT NULL,
+	UserId      VARCHAR (7) NOT NULL,
+	RegTime     DATETIME NOT NULL
+	)
+GO
+
+
+-----------------------
+
+IF OBJECT_ID ('speccs.TBSC_EVENTS') IS NOT NULL
+	DROP TABLE speccs.TBSC_EVENTS
+GO
+
+CREATE TABLE speccs.TBSC_EVENTS
+	(
+	SLNO             INT IDENTITY NOT NULL,
+	SESSION_ID       CHAR (255) NOT NULL,
+	EVENT_ID         CHAR (20) NOT NULL,
+	EVENT_NAME       CHAR (100) NOT NULL,
+	EVENT_DESC       CHAR (100) NOT NULL,
+	EVENT_GEN_BY     CHAR (50) NOT NULL,
+	EVENT_OCCRD_TIME DATETIME NULL,
+	EVENT_TYPE       CHAR (20) NOT NULL,
+	EVENT_SRC_MODULE CHAR (50) NOT NULL,
+	EVENT_IPADDRESS  CHAR (30) NOT NULL
+	)
+GO
+
+----------------------
+
+IF OBJECT_ID ('speccs.TBSC_EXCEPTIONLOG') IS NOT NULL
+	DROP TABLE speccs.TBSC_EXCEPTIONLOG
+GO
+
+CREATE TABLE speccs.TBSC_EXCEPTIONLOG
+	(
+	EXCEPTIONID   INT IDENTITY NOT NULL,
+	EXCEPTIONMSG  VARCHAR (500) NOT NULL,
+	SERVLETNAME   VARCHAR (100) NOT NULL,
+	EMPLOYEECODE  CHAR (10) NOT NULL,
+	CLIENTIP      VARCHAR (50) NOT NULL,
+	EXCEPTIONTIME DATETIME NULL,
+	CONSTRAINT TBRO_EXCEPTIONLOG PRIMARY KEY (EXCEPTIONID)
+	)
+GO
+
+------------------------
+
+
+
+IF OBJECT_ID ('speccs.ThriftInterestAmnt') IS NOT NULL
+	DROP TABLE speccs.ThriftInterestAmnt
+GO
+
+CREATE TABLE speccs.ThriftInterestAmnt
+	(
+	MemAccNo       VARCHAR (5) NOT NULL,
+	MemEmpCode     VARCHAR (7) NOT NULL,
+	MemName        VARCHAR (100) NOT NULL,
+	ThriftInterest NUMERIC (15,2) NOT NULL,
+	BankAccNo      VARCHAR (25) NOT NULL,
+	BankName       VARCHAR (5) NOT NULL,
+	RegTime        DATETIME NOT NULL
+	)
+GO
+
+---------------------
+
+IF OBJECT_ID ('speccs.ThriftInterestUploading') IS NOT NULL
+	DROP TABLE speccs.ThriftInterestUploading
+GO
+
+CREATE TABLE speccs.ThriftInterestUploading
+	(
+	EmpCode    VARCHAR (50) NOT NULL,
+	UploadDate DATETIME NOT NULL,
+	RegDate    DATETIME NOT NULL,
+	Amount     FLOAT NOT NULL,
+	ThriftType INT DEFAULT 0 NOT NULL
+	)
+GO
+
+------------------
+
+IF OBJECT_ID ('speccs.ThriftLoanUpdateStatus') IS NOT NULL
+	DROP TABLE speccs.ThriftLoanUpdateStatus
+GO
+
+CREATE TABLE speccs.ThriftLoanUpdateStatus
+	(
+	EmployeeName    VARCHAR (100) NOT NULL,
+	MemberAccNo     VARCHAR (50) NOT NULL,
+	TLEAmount       DECIMAL (18,2) NOT NULL,
+	RequestedAmount DECIMAL (18,2) NOT NULL,
+	TransactionDate DATETIME NOT NULL,
+	Status          VARCHAR (20) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	UserId          VARCHAR (50) NOT NULL
+	)
+GO
+
+-----------------
+IF OBJECT_ID ('speccs.ThriftTransactions') IS NOT NULL
+	DROP TABLE speccs.ThriftTransactions
+GO
+
+CREATE TABLE speccs.ThriftTransactions
+	(
+	MemAccNo        VARCHAR (5) NOT NULL,
+	Month           VARCHAR (8) NOT NULL,
+	TransactionDate DATETIME NOT NULL,
+	ModeOfPayment   CHAR (15) NOT NULL,
+	Amount          DECIMAL (15,2) NOT NULL,
+	ReceiptNo       VARCHAR (13) NOT NULL,
+	UserId          VARCHAR (7) NOT NULL,
+	RegTime         DATETIME NOT NULL,
+	ThriftBalance   DECIMAL (15,2) NOT NULL
+	)
+GO
+
+------------------
+IF OBJECT_ID ('speccs.TransactionLog') IS NOT NULL
+	DROP TABLE speccs.TransactionLog
+GO
+
+CREATE TABLE speccs.TransactionLog
+	(
+	UserId      VARCHAR (7) NULL,
+	Module      VARCHAR (8) NULL,
+	KeyId       VARCHAR (15) NULL,
+	Description VARCHAR (250) NULL,
+	RecTime     DATETIME NOT NULL,
+	ClientIP    VARCHAR (20) NULL,
+	Remarks     VARCHAR (250) NULL
+	)
+GO
+
+---------------
+
+IF OBJECT_ID ('speccs.TransactionType') IS NOT NULL
+	DROP TABLE speccs.TransactionType
+GO
+
+CREATE TABLE speccs.TransactionType
+	(
+	PayCode        VARCHAR (3) NOT NULL,
+	Description    VARCHAR (50) NOT NULL,
+	PaymentReceipt VARCHAR (1) NOT NULL,
+	SalaryCode     VARCHAR (3) NULL,
+	AccountCode    INT NULL,
+	UserId         VARCHAR (7) NOT NULL,
+	RegTime        DATETIME NOT NULL,
+	ScreenType     CHAR (3) NULL,
+	PRIMARY KEY (PayCode)
+	)
+GO
+
+--------------------
+IF OBJECT_ID ('speccs.WrongPayment') IS NOT NULL
+	DROP TABLE speccs.WrongPayment
+GO
+
+CREATE TABLE speccs.WrongPayment
+	(
+	MemAccNo    VARCHAR (10) NOT NULL,
+	PurposeCode VARCHAR (5) NOT NULL,
+	PayDate     VARCHAR (10) NOT NULL,
+	Amount      NUMERIC (15,2) NOT NULL,
+	ChequeNo    VARCHAR (30) NOT NULL,
+	Remarks     VARCHAR (200) NOT NULL,
+	PaymentNo   VARCHAR (13) NOT NULL
+	)
+GO
+
+-------------------
