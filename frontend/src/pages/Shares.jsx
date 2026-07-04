@@ -27,17 +27,29 @@ export default function Shares() {
   const roles = JSON.parse(localStorage.getItem("roles") || "[]");
   const isAdmin = roles.includes("ROLE_ADMIN");
   const isClerk = roles.includes("ROLE_CLERK");
+  const isAccountant = roles.includes("ROLE_ACCOUNTANT");
+  const isMember = roles.includes("ROLE_MEMBER") || (!isAdmin && !isClerk && !isAccountant);
 
   const fetchInitialData = async () => {
     setLoading(true);
     setError("");
     try {
-      const [sharesRes, membersRes] = await Promise.all([
-        API.get("/shares"),
-        API.get("/members"),
-      ]);
-      setShares(sharesRes.data);
-      setMembers(membersRes.data);
+      if (isAdmin || isClerk || isAccountant) {
+        const [sharesRes, membersRes] = await Promise.all([
+          API.get("/shares"),
+          API.get("/members"),
+        ]);
+        setShares(sharesRes.data);
+        setMembers(membersRes.data);
+      } else {
+        const meRes = await API.get("/members/me");
+        const member = meRes.data;
+        if (member && member.id) {
+          const sharesRes = await API.get(`/shares/member/${member.id}`);
+          setShares(sharesRes.data || []);
+          setMembers([member]);
+        }
+      }
     } catch (err) {
       setError("Failed to load share ledger accounts.");
     } finally {
@@ -84,8 +96,8 @@ export default function Shares() {
 
       <header className="page-header" style={{ marginBottom: '2rem' }}>
         <div className="page-title-group">
-          <h1 className="gradient-heading">Share Capital Ledger</h1>
-          <p>Issue society shares, manage share values, and track certificates</p>
+          <h1 className="gradient-heading">{isMember ? "My Share Capital" : "Share Capital Ledger"}</h1>
+          <p>{isMember ? "Track your share certificates and capital contributions" : "Issue society shares, manage share values, and track certificates"}</p>
         </div>
       </header>
 
@@ -145,7 +157,7 @@ export default function Shares() {
       {/* Share List */}
       <section>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>Shares Log Book</h2>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)' }}>{isMember ? "My Share Transactions" : "Shares Log Book"}</h2>
           <div className="table-header-group">
             {(isAdmin || isClerk) && (
               <button className="btn-enterprise btn-primary" onClick={() => setShowForm(true)}>

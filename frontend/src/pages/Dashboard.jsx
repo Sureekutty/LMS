@@ -56,7 +56,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      if (isAdmin) {
+      if (isAdmin || isClerk || isAccountant) {
         const [membersRes, loansRes, txnsRes, depositsRes] = await Promise.all([
           API.get("/members"), API.get("/loans"), API.get("/transactions"), API.get("/deposits")
         ]);
@@ -235,7 +235,7 @@ export default function Dashboard() {
           <div style={{ position: "relative", zIndex: 2 }}>
             {/* Stats Grid */}
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
-              {isAdmin ? (
+              {(isAdmin || isClerk || isAccountant) ? (
                 <>
                   <div className="dashboard-card stat-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
@@ -394,7 +394,7 @@ export default function Dashboard() {
               <div className="dashboard-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={18} style={{ color: 'var(--primary)' }} /> Recent Ledger Activity
+                    <FileText size={18} style={{ color: 'var(--primary)' }} /> {isMember ? "My Recent Activity" : "Recent Ledger Activity"}
                   </h3>
                   <button className="btn-enterprise btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>View All</button>
                 </div>
@@ -463,25 +463,52 @@ export default function Dashboard() {
                 
                 <div className="dashboard-card" style={{ padding: '1.5rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={16} style={{ color: 'var(--primary)', fill: 'var(--primary)' }} /> Quick Actions
+                    <Zap size={16} style={{ color: 'var(--primary)', fill: 'var(--primary)' }} /> {isMember ? "My Account" : "Quick Actions"}
                   </h3>
                   <div className="quick-actions-grid">
-                    <div className="quick-action-btn" onClick={() => navigate("/members")}>
-                      <div className="qa-icon-wrap" style={{ background: '#e0f2fe', color: '#0ea5e9' }}><UserPlus size={20} /></div>
-                      <span>Add Member</span>
-                    </div>
-                    <div className="quick-action-btn" onClick={() => navigate("/loans")}>
-                      <div className="qa-icon-wrap" style={{ background: '#dcfce7', color: '#10b981' }}><FileText size={20} /></div>
-                      <span>New Loan</span>
-                    </div>
-                    <div className="quick-action-btn" onClick={() => navigate("/deposits")}>
-                      <div className="qa-icon-wrap" style={{ background: '#fef3c7', color: '#f59e0b' }}><Landmark size={20} /></div>
-                      <span>Add Deposit</span>
-                    </div>
-                    <div className="quick-action-btn" onClick={() => navigate("/payments")}>
-                      <div className="qa-icon-wrap" style={{ background: '#f3e8ff', color: '#9333ea' }}><CreditCard size={20} /></div>
-                      <span>Add Payment</span>
-                    </div>
+                    {isMember ? (
+                      <>
+                        <div className="quick-action-btn" onClick={() => navigate("/loans")}>
+                          <div className="qa-icon-wrap" style={{ background: '#dcfce7', color: '#10b981' }}><FileText size={20} /></div>
+                          <span>My Loans</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/deposits")}>
+                          <div className="qa-icon-wrap" style={{ background: '#fef3c7', color: '#f59e0b' }}><Landmark size={20} /></div>
+                          <span>My Deposits</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/shares")}>
+                          <div className="qa-icon-wrap" style={{ background: '#f3e8ff', color: '#9333ea' }}><CreditCard size={20} /></div>
+                          <span>My Share Capital</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => setCurrentTab("settings")}>
+                          <div className="qa-icon-wrap" style={{ background: '#e0f2fe', color: '#0ea5e9' }}><UserPlus size={20} /></div>
+                          <span>My Profile</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/polls")}>
+                          <div className="qa-icon-wrap" style={{ background: '#fee2e2', color: '#ef4444' }}><MessageSquare size={20} /></div>
+                          <span>Society Polls</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="quick-action-btn" onClick={() => navigate("/members")}>
+                          <div className="qa-icon-wrap" style={{ background: '#e0f2fe', color: '#0ea5e9' }}><UserPlus size={20} /></div>
+                          <span>Add Member</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/loans")}>
+                          <div className="qa-icon-wrap" style={{ background: '#dcfce7', color: '#10b981' }}><FileText size={20} /></div>
+                          <span>New Loan</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/deposits")}>
+                          <div className="qa-icon-wrap" style={{ background: '#fef3c7', color: '#f59e0b' }}><Landmark size={20} /></div>
+                          <span>Add Deposit</span>
+                        </div>
+                        <div className="quick-action-btn" onClick={() => navigate("/payments")}>
+                          <div className="qa-icon-wrap" style={{ background: '#f3e8ff', color: '#9333ea' }}><CreditCard size={20} /></div>
+                          <span>Add Payment</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
