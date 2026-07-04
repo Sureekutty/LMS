@@ -136,19 +136,19 @@ export default function MemberForm() {
       </button>
 
       {/* Premium Title Box */}
-      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '2rem 2.5rem', borderRadius: '16px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.3)', marginBottom: '2rem' }}>
+      <div style={{ background: 'white', padding: '2rem 2.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>{isEditing ? "Edit Member Profile" : "Enroll New Member"}</h1>
-          <p style={{ margin: '0.5rem 0 0 0', color: '#cbd5e1', fontSize: '1rem' }}>{isEditing ? `Updating comprehensive records for ${form.name || ''}` : "Register a new society member and set up their accounts"}</p>
+          <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{isEditing ? "Edit Member Profile" : "Enroll New Member"}</h1>
+          <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', fontSize: '1rem' }}>{isEditing ? `Updating comprehensive records for ${form.name || ''}` : "Register a new society member and set up their accounts"}</p>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.25rem', borderRadius: '50%', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <UserCheck size={36} color="#38bdf8" />
+        <div style={{ background: '#f0f9ff', padding: '1.25rem', borderRadius: '50%', border: '1px solid #e0f2fe' }}>
+          <UserCheck size={36} color="var(--primary)" />
         </div>
       </div>
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-      <div className="glass-card">
+      <div className="glass-card" style={{ padding: '2.5rem' }}>
         <form onSubmit={handleSubmit} className="member-form">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
             <h3 style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
