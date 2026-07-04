@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Landmark, Users, CreditCard, LogOut, Home, Settings, Bell, 
-  ShieldAlert, FileText, Search, Sun, ChevronRight, UserPlus 
+  ShieldAlert, FileText, Search, Sun, Moon, ChevronRight, UserPlus 
 } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 import './Layout.css';
@@ -13,6 +13,29 @@ export default function Layout({ children }) {
   const currentPath = location.pathname;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  };
   
   const [username, setUsername] = useState(localStorage.getItem("username") || "Admin");
   const [profileImage, setProfileImage] = useState(null);
@@ -157,18 +180,41 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <div className="topbar-search">
               <Search size={16} color="#94a3b8" />
-              <input type="text" placeholder="Search anything..." />
+              <input ref={searchInputRef} type="text" placeholder="Search anything..." />
               <kbd>Ctrl+K</kbd>
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginLeft: '0.5rem' }}>
-              <button className="icon-btn" style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
-                <Sun size={20} />
+              <button className="icon-btn" onClick={toggleTheme} style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
+                {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
               </button>
-              <button className="icon-btn" style={{ position: 'relative', background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
-                <Bell size={20} />
-                <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', background: '#ef4444', borderRadius: '50%', border: '2px solid white', color: 'white', fontSize: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
-              </button>
+              
+              <div style={{ position: 'relative' }}>
+                <button className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
+                  <Bell size={20} />
+                  <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', background: '#ef4444', borderRadius: '50%', border: '2px solid white', color: 'white', fontSize: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+                </button>
+                
+                {isNotificationsOpen && (
+                  <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)', width: '280px', zIndex: 100, overflow: 'hidden' }}>
+                    <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: 'var(--text-primary)' }}>Notifications</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}>Mark all read</span>
+                    </div>
+                    <div style={{ padding: '0', maxHeight: '300px', overflowY: 'auto' }}>
+                      {[1, 2, 3].map(i => (
+                        <div key={i} style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: '1rem', cursor: 'pointer' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', marginTop: '6px' }}></div>
+                          <div>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>New Share Transfer</p>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>John Doe requested a transfer of 50 shares.</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <div style={{ position: 'relative' }}>
                 <div onClick={() => setIsProfileOpen(!isProfileOpen)} title="Account Settings" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '0.5rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '50px', transition: 'all 0.2s', background: isProfileOpen ? '#f1f5f9' : 'transparent' }}>

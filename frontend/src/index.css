@@ -401,3 +401,35 @@ html, body, #root {
   font-size: 0.95rem;
 }
 
+
+/* Dark Theme Prototype */
+body.dark-theme {
+  --bg-body: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-light: #334155;
+  --border-color: #334155;
+}
+body.dark-theme .glass-card {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-theme .enterprise-input {
+  background: #0f172a;
+  color: white;
+  border-color: #334155;
+}
+body.dark-theme .icon-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+body.dark-theme .global-topbar {
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+body.dark-theme .topbar-search input {
+  color: white;
+}
+
